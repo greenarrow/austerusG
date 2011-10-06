@@ -1,6 +1,9 @@
 GCC = gcc
 
-all: austerus-core
+all: objdir austerus-core
+
+objdir:
+	mkdir -p build
 
 austerus-core: serial.o austerus-core.o
 	$(GCC) -o austerus-core build/serial.o build/austerus-core.o
