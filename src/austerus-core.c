@@ -81,11 +81,14 @@ int main(int argc, char* argv[]) {
 			case 'h':
 				usage();
 				return EXIT_SUCCESS;
+			case 'p':
+				serial_port = optarg;
+				break;
 			case 'b':
 				baudrate = strtol(optarg, NULL, 10);
 				break;
-			case 'p':
-				serial_port = optarg;
+			case 'c':
+				ack_count = strtol(optarg, NULL, 10);
 				break;
 			case 'v':
 				verbose = 1;
@@ -144,7 +147,7 @@ int main(int argc, char* argv[]) {
 
 		// Keep sending lines until we reach the maximum outstanding
 		// acknoledgements
-		while (ack_outstanding < ack_count) {
+		while (ack_outstanding < ack_count || ack_count == 0) {
 
 			// Block until we have a complete line from stdin
 			nbytes = getline(&pipe_buffer, &pipe_buffer_len, stdin);
@@ -177,7 +180,7 @@ int main(int argc, char* argv[]) {
 		// send any more lines.
 		serial_retries = 0;
 
-		while (ack_outstanding >= ack_count && ACK_ENABLE) {
+		while (ack_outstanding >= ack_count && ack_count > 0) {
 			// Block until we have read an entire line from serial
 			// or we timeout
 			nbytes = serial_getline(serial, serial_buffer);
