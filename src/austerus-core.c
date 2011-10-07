@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <string.h>
 #include <getopt.h>
+#include <unistd.h>
 #include <sys/ioctl.h>
 
 #include "serial.h"
@@ -35,7 +36,6 @@ void usage(void) {
 
 // Main function
 int main(int argc, char* argv[]) {
-	int status;
 	int nbytes;
 
 	unsigned int ack_count = DEFAULT_ACK_COUNT;

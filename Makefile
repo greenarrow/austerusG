@@ -1,4 +1,4 @@
-GCC = gcc
+GCC = gcc -Wall
 
 all: objdir austerus-core
 
