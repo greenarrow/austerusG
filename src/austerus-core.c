@@ -113,6 +113,7 @@ int main(int argc, char* argv[]) {
 		bytes_r = serial_getline(serial, line_feedback);
 		printf("%s", line_feedback);
 
+		usleep(SERIAL_INIT_PAUSE);
 		tcflush(serial, TCIOFLUSH);
 		usleep(SERIAL_INIT_PAUSE);
 	}
@@ -180,8 +181,11 @@ int main(int argc, char* argv[]) {
 			bytes_r = serial_getline(serial, line_feedback);
 
 			if (bytes_r == -1) {
-				perror("Warning: ACK has not been received");
+				if (serial_retries > 0)
+					perror("Warning: ACK has not been received");
+
 				serial_retries++;
+				usleep(SERIAL_RETRY_PERIOD);
 
 				// After a defined number of attempts
 				// (timeouts) we give up waiting for the ACKs
