@@ -17,6 +17,7 @@ char *serial_port = NULL;
 char *filename;
 
 int serial;
+char *line_gcode = NULL;
 FILE *output_file;
 
 
@@ -36,17 +37,16 @@ void usage(void) {
 
 // Main function
 int main(int argc, char* argv[]) {
-	int nbytes;
 
 	unsigned int ack_count = DEFAULT_ACK_COUNT;
 	unsigned int ack_outstanding = 0;
 	unsigned int serial_retries;
-	unsigned int buffer_len;
 
-	size_t pipe_buffer_len = PIPE_LINE_BUFFER_LEN;
+	ssize_t bytes_r, bytes_w;
+	size_t line_gcode_len = 0;
 
-	char serial_buffer[SERIAL_LINE_BUFFER_LEN];
-	char *pipe_buffer;
+	// Buffer for reading from serial port
+	char line_feedback[SERIAL_LINE_LEN];
 
 	// User options
 	int baudrate = DEFAULT_BAUDRATE;
@@ -96,9 +96,6 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// Allocate inital size of input line buffer
-	pipe_buffer = (char *) malloc (pipe_buffer_len + 1);
-
 	if (verbose > 0)
 		printf("verbose mode\n");
 
@@ -119,8 +116,8 @@ int main(int argc, char* argv[]) {
 		tcflush(serial, TCIOFLUSH);
 		usleep(SERIAL_INIT_PAUSE);
 
-		nbytes = serial_getline(serial, serial_buffer);
-		printf("%s", serial_buffer);
+		bytes_r = serial_getline(serial, line_feedback);
+		printf("%s", line_feedback);
 
 		tcflush(serial, TCIOFLUSH);
 		usleep(SERIAL_INIT_PAUSE);
@@ -150,24 +147,27 @@ int main(int argc, char* argv[]) {
 		while (ack_outstanding < ack_count || ack_count == 0) {
 
 			// Block until we have a complete line from stdin
-			nbytes = getline(&pipe_buffer, &pipe_buffer_len, stdin);
+			bytes_r = getline(&line_gcode, &line_gcode_len, stdin);
 
-			if (nbytes == -1) {
+			if (bytes_r == -1) {
 				perror("Error: stream error");
 				fprintf(output_file, "Error: stream error\n");
 				leave(EXIT_FAILURE);
 			}
 
 			if (filename) {
-				fprintf(output_file, "%s", pipe_buffer);
+				fprintf(output_file, "%s", line_gcode);
 				fflush(output_file);
 			}
 
 			if (serial_port) {
+				// Don't send empty lines
+				if (bytes_r <= 1)
+					continue;
+
 				// Write the line to the serial port
-				buffer_len = strlen(pipe_buffer);
-				nbytes = write(serial, pipe_buffer, buffer_len);
-				if(nbytes != buffer_len) {
+				bytes_w = write(serial, line_gcode, line_gcode_len);
+				if (bytes_w != bytes_r) {
 					perror("Error: write error");
 					leave(EXIT_FAILURE);
 				}
@@ -183,9 +183,9 @@ int main(int argc, char* argv[]) {
 		while (ack_outstanding >= ack_count && ack_count > 0) {
 			// Block until we have read an entire line from serial
 			// or we timeout
-			nbytes = serial_getline(serial, serial_buffer);
+			bytes_r = serial_getline(serial, line_feedback);
 
-			if (nbytes == -1) {
+			if (bytes_r == -1) {
 				perror("Warning: ACK has not been received");
 				serial_retries++;
 
@@ -200,18 +200,18 @@ int main(int argc, char* argv[]) {
 					tcflush(serial, TCIOFLUSH);
 				}
 
-			} else if (strncmp(serial_buffer, MSG_ACK, MSG_ACK_LEN) == 0 ||
-					strncmp(serial_buffer, MSG_DUD, MSG_DUD_LEN) == 0) {
+			} else if (strncmp(line_feedback, MSG_ACK, MSG_ACK_LEN) == 0 ||
+					strncmp(line_feedback, MSG_DUD, MSG_DUD_LEN) == 0) {
 				// If the line is an ACK (either ok or error)
 				// then decrement count and send to stdout.
 
 				ack_outstanding--;
-				printf("%s\n", serial_buffer);
+				printf("%s\n", line_feedback);
 
 			} else {
 				// If the line is not an ACK then just send to
 				// stdout.
-				printf("%s\n", serial_buffer);
+				printf("%s\n", line_feedback);
 			}
 		}
 	}
@@ -228,6 +228,9 @@ void leave(int signal) {
 
 	if (serial_port)
 		close(serial);
+
+	if (line_gcode)
+		free(line_gcode);
 
 	exit(signal);
 }

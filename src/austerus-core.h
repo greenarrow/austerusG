@@ -3,9 +3,7 @@
 #define MSG_DUD			"rs 0 Dud"
 #define MSG_DUD_LEN		8
 
-#define PIPE_LINE_BUFFER_LEN	100
-#define SERIAL_LINE_BUFFER_LEN	255
-
+#define SERIAL_LINE_LEN		255
 #define SERIAL_INIT_PAUSE	500000
 #define SERIAL_RETRIES		4
 
