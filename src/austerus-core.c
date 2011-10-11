@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
 					continue;
 
 				// Write the line to the serial port
-				bytes_w = write(serial, line_gcode, line_gcode_len);
+				bytes_w = write(serial, line_gcode, bytes_r);
 				if (bytes_w != bytes_r) {
 					perror("Error: write error");
 					leave(EXIT_FAILURE);
