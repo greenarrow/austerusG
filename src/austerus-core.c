@@ -51,12 +51,6 @@ int main(int argc, char* argv[]) {
 	// User options
 	int baudrate = DEFAULT_BAUDRATE;
 
-	// Display help
-	if (argc==1) {
-		usage();
-		return EXIT_SUCCESS;
-	}
-
 	// Bind to SIGINT for cleanup
 	signal(SIGINT, leave);
 
