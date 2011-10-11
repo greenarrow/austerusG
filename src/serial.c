@@ -103,8 +103,8 @@ int serial_init(const char* serialport, int baud) {
 	toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 	toptions.c_oflag &= ~OPOST;
 
-	// // Block for one character with 0.5s timeout
-	toptions.c_cc[VMIN]  = 1;
+	// // Block with 0.5s timeout
+	toptions.c_cc[VMIN]  = 0;
 	toptions.c_cc[VTIME] = 5;
 
 	if (tcsetattr(serial, TCSANOW, &toptions) < 0)
