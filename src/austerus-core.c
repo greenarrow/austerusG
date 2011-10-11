@@ -200,15 +200,17 @@ int main(int argc, char* argv[]) {
 					tcflush(serial, TCIOFLUSH);
 				}
 
-			} else if (strncmp(serial_buffer, MSG_ACK, nbytes) == 0) {
+			} else if (strncmp(serial_buffer, MSG_ACK, MSG_ACK_LEN) == 0 ||
+					strncmp(serial_buffer, MSG_DUD, MSG_DUD_LEN) == 0) {
+				// If the line is an ACK (either ok or error)
+				// then decrement count and send to stdout.
+
 				ack_outstanding--;
 				printf("%s\n", serial_buffer);
 
-			// TODO also accept line error response to decrement
-			// counter
-
 			} else {
-				// Line is not an ACK so send to stdout
+				// If the line is not an ACK then just send to
+				// stdout.
 				printf("%s\n", serial_buffer);
 			}
 		}

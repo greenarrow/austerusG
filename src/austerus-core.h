@@ -1,4 +1,7 @@
 #define MSG_ACK			"ok"
+#define MSG_ACK_LEN		2
+#define MSG_DUD			"rs 0 Dud"
+#define MSG_DUD_LEN		8
 
 #define PIPE_LINE_BUFFER_LEN	100
 #define SERIAL_LINE_BUFFER_LEN	255
