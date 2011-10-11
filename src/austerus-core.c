@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
 		
 		if (serial == -1) {
 			perror("Error: unable to open serial port");
- 			return EXIT_FAILURE;
+			return EXIT_FAILURE;
 		}
 
 		usleep(SERIAL_INIT_PAUSE);
