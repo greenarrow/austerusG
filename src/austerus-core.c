@@ -14,11 +14,11 @@
 // User options. Global for signal handler.
 int verbose = 0;
 char *serial_port = NULL;
-char *filename;
+char *filename = NULL;
 
 int serial;
 char *line_gcode = NULL;
-FILE *output_file;
+FILE *output_file = NULL;
 
 
 // Print help
@@ -217,7 +217,7 @@ void leave(int signal) {
 	if (verbose > 0)
 		printf("dispatcher exiting\n");
 
-	if (filename)
+	if (output_file)
 		fclose(output_file);
 
 	if (serial_port)
