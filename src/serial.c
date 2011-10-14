@@ -1,6 +1,7 @@
-/* Port configuration based on great example "Arduino-serial" by Tod E. Kurt.
+/* Port configuration partially based on great example "Arduino-serial" by
+ * Tod E. Kurt.
  * http://todbot.com/blog/2006/12/06/arduino-serial-c-code-to-talk-to-arduino/
- * 
+ *
  * Header from Tod's source file:
  *
  * Created 5 December 2006
@@ -19,13 +20,15 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 
+#include "serial.h"
+
 
 // Open serial port from name and baud rate and return file desciptor
 int serial_init(const char* serialport, int baud) {
 	struct termios toptions;
 	int serial;
 
-	serial = open(serialport, O_RDWR | O_NOCTTY | O_NDELAY);
+	serial = open(serialport, O_RDWR | O_NOCTTY);
 	if (serial == -1)
 		return -1;
 
@@ -103,9 +106,9 @@ int serial_init(const char* serialport, int baud) {
 	toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 	toptions.c_oflag &= ~OPOST;
 
-	// // Block with 0.5s timeout
-	toptions.c_cc[VMIN]  = 0;
-	toptions.c_cc[VTIME] = 5;
+	// set blocking method
+	toptions.c_cc[VMIN] = SERIAL_VMIN;
+	toptions.c_cc[VTIME] = SERIAL_VTIME;
 
 	if (tcsetattr(serial, TCSANOW, &toptions) < 0)
 		return -1;
@@ -115,36 +118,38 @@ int serial_init(const char* serialport, int baud) {
 
 
 // Read a complete line from the serial port
-int serial_getline(int serial, char *buffer) {
+int serial_getline(int serial, char *buffer, int timeout) {
+	int nbytes, i = 0;
+	int retries = (timeout * 10) / SERIAL_VTIME;
 	char byte[1];
-	int nbytes;
-	int i = 0;
 
-	do { 
-		// block for one character or timeout
+	do {
+		// Block until one character received or timeout
 		nbytes = read(serial, byte, 1);
 
-		// timeout
-		if (nbytes == -1) {
+		// Return if in error state
+		if (nbytes == -1)
 			return -1;
+
+		// Try again if timed out
+		if (nbytes == 0) {
+			retries--;
+			continue;
 		}
 
-		if (nbytes > 0 ) {
-			buffer[i] = byte[0];
-			i++;
-		}
+		// Otherwise add the new byte to the buffer
+		buffer[i] = byte[0];
+		i++;
 
-	} while (byte[0] != '\n');
+	} while (byte[0] != '\n' && retries > 0);
 
-	// remove end of line characters and null terminate the string
+	// Remove end of line characters and null terminate the string
+	if (buffer[i - 2] == '\r')
+		i -= 2;
+	else
+		i -= 1;
 
-	if (buffer[i - 2] == '\r') {
-		buffer[i - 2] = 0;
-		i = i - 2;
-	} else {
-		buffer[i - 1] = 0;
-		i = i - 1;
-	}
+	buffer[i] = 0;
 
 	return i;
 }

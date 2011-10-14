@@ -40,7 +40,6 @@ int main(int argc, char* argv[]) {
 
 	unsigned int ack_count = DEFAULT_ACK_COUNT;
 	unsigned int ack_outstanding = 0;
-	unsigned int serial_retries;
 
 	ssize_t bytes_r, bytes_w;
 	size_t line_gcode_len = 0;
@@ -50,6 +49,7 @@ int main(int argc, char* argv[]) {
 
 	// User options
 	int baudrate = DEFAULT_BAUDRATE;
+	int serial_timeout = DEFAULT_TIMEOUT;
 
 	// Bind to SIGINT for cleanup
 	signal(SIGINT, leave);
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 			printf("opening serial port %s\n", serial_port);
 
 		serial = serial_init(serial_port, baudrate);
-		
+
 		if (serial == -1) {
 			perror("Error: unable to open serial port");
 			return EXIT_FAILURE;
@@ -110,7 +110,14 @@ int main(int argc, char* argv[]) {
 		tcflush(serial, TCIOFLUSH);
 		usleep(SERIAL_INIT_PAUSE);
 
-		bytes_r = serial_getline(serial, line_feedback);
+		// Read initialisation message
+		bytes_r = serial_getline(serial, line_feedback, serial_timeout);
+
+		if (bytes_r == -1) {
+			perror("Error: serial port timeout");
+			return EXIT_FAILURE;
+		}
+
 		printf("%s", line_feedback);
 
 		usleep(SERIAL_INIT_PAUSE);
@@ -173,30 +180,16 @@ int main(int argc, char* argv[]) {
 
 		// We must wait for at least one acknowledgement before we can
 		// send any more lines.
-		serial_retries = 0;
 
 		while (ack_outstanding >= ack_count && ack_count > 0) {
 			// Block until we have read an entire line from serial
 			// or we timeout
-			bytes_r = serial_getline(serial, line_feedback);
+			bytes_r = serial_getline(serial, line_feedback, serial_timeout);
 
 			if (bytes_r == -1) {
-				if (serial_retries > 0)
-					perror("Warning: ACK has not been received");
-
-				serial_retries++;
-				usleep(SERIAL_RETRY_PERIOD);
-
-				// After a defined number of attempts
-				// (timeouts) we give up waiting for the ACKs
-				// and clear the buffer. This prevents
-				// deadlocks from occuring.
-
-				if (serial_retries > SERIAL_RETRIES) {
-					perror("Error: Out of retries, clearing serial buffer");
-					ack_outstanding = 0;
-					tcflush(serial, TCIOFLUSH);
-				}
+				perror("Error: serial timeout, clearing serial buffer");
+				tcflush(serial, TCIOFLUSH);
+				ack_outstanding = 0;
 
 			} else if (strncmp(line_feedback, MSG_ACK, MSG_ACK_LEN) == 0 ||
 					strncmp(line_feedback, MSG_DUD, MSG_DUD_LEN) == 0) {
