@@ -151,13 +151,11 @@ int main(int argc, char* argv[]) {
 			// Block until we have a complete line from stdin
 			bytes_r = getline(&line_gcode, &line_gcode_len, stdin);
 
-			if (bytes_r == -1) {
-				perror("Error: stream error");
-				fprintf(output_file, "Error: stream error\n");
+			// Check if stream is closed
+			if (bytes_r == -1)
 				leave(EXIT_FAILURE);
-			}
 
-			if (filename) {
+			if (output_file) {
 				fprintf(output_file, "%s", line_gcode);
 				fflush(output_file);
 			}
