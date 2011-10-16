@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
 			return EXIT_FAILURE;
 		}
 
-		printf("%s", line_feedback);
+		printf("%s\n", line_feedback);
 
 		usleep(SERIAL_INIT_PAUSE);
 		tcflush(serial, TCIOFLUSH);
