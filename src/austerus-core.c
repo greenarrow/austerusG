@@ -155,6 +155,12 @@ int main(int argc, char* argv[]) {
 			if (bytes_r == -1)
 				leave(EXIT_FAILURE);
 
+			// Handle internal austerusG control commands
+			if (strncmp(line_gcode, MSG_CMD, MSG_CMD_LEN) == 0) {
+				process_command(line_gcode);
+				continue;
+			}
+
 			if (output_file) {
 				fprintf(output_file, "%s", line_gcode);
 				fflush(output_file);
@@ -203,6 +209,14 @@ int main(int argc, char* argv[]) {
 				printf("%s\n", line_feedback);
 			}
 		}
+	}
+}
+
+
+// Process an internal austerusG control command
+void process_command(char *line) {
+	if (strncmp(line, MSG_CMD_EXIT, MSG_CMD_EXIT_LEN) == 0) {
+		leave(EXIT_SUCCESS);
 	}
 }
 
