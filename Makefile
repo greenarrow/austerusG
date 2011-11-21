@@ -1,4 +1,4 @@
-GCC = gcc -Wall
+GCC = clang -Wall
 
 all: objdir austerus-send austerus-core
 
