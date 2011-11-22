@@ -23,7 +23,7 @@ FILE *output_file = NULL;
 
 // Print help
 void usage(void) {
-	printf("Usage: austerus-core [OPTIONS]\n"
+	printf("Usage: austerus-core [OPTION]...\n"
 	"\n"
 	"Options:\n"
 	" -h, --help             Print this help message\n"
