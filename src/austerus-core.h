@@ -11,10 +11,6 @@
 #define SERIAL_LINE_LEN		255
 #define SERIAL_INIT_PAUSE	500000
 
-#define DEFAULT_BAUDRATE	57600
-#define DEFAULT_TIMEOUT		60
-#define DEFAULT_ACK_COUNT	1
-
 
 void usage(void);
 int main(int argc, char* argv[]);

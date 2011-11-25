@@ -1,9 +1,12 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <sys/wait.h>
 
 #include "austerus-send.h"
+#include "defaults.h"
 
 
 // Print a time in seconds as HH:MM:SS
@@ -37,7 +40,8 @@ void print_status(int pct, int taken, int estimate) {
 }
 
 
-void print_file(FILE *stream_gcode, FILE *stream_input) {
+// Print gcode from stream_input to austerus-core on stream_gcode
+void print_file(FILE *stream_gcode, FILE *stream_input, int verbose) {
 	int i;
 
 	char *line = NULL;
@@ -61,7 +65,9 @@ void print_file(FILE *stream_gcode, FILE *stream_input) {
 
 		fprintf(stream_gcode, "%s", line);
 		fflush(stream_gcode);
-		printf("%s", line);
+
+		if (verbose)
+			printf("%s", line);
 	}
 
 	if (line)
@@ -69,17 +75,81 @@ void print_file(FILE *stream_gcode, FILE *stream_input) {
 }
 
 
+// Print usage to terminal
+void usage(void) {
+	printf("Usage: austerus-send [OPTION]... [FILE]...\n"
+	"\n"
+	"Options:\n"
+	" -h, --help             Print this help message\n"
+	" -p, --port=serialport  Serial port Arduino is on\n"
+	" -b, --baud=baudrate    Baudrate (bps) of Arduino\n"
+	" -c, --ack-count        Set delayed ack count (1 is no delayed ack)\n"
+	" -v, --verbose          Print extra output\n"
+	"\n");
+}
+
+
 int main(int argc, char *argv[])
 {
 	FILE *stream_gcode;
 	FILE *stream_input;
+
+	char *serial_port = NULL;
+	unsigned int ack_count = DEFAULT_ACK_COUNT;
+	int baudrate = DEFAULT_BAUDRATE;
+	int verbose = 0;
+
+	char *cmd = NULL;	// Command string to execute austerus-core
+
 	int status;
 	int i;
 
-	stream_gcode = popen(
-		"/usr/bin/env PATH=$PWD:$PATH "
-		"austerus-core -p /dev/ttyACM0 -b 57600 -c 2 ", "w"
-	);
+	// Read command line options
+	int option_index = 0, opt=0;
+	static struct option loptions[] = {
+		{"help", no_argument, 0, 'h'},
+		{"port", required_argument, 0, 'p'},
+		{"baud", required_argument, 0, 'b'},
+		{"ack-count", required_argument, 0, 'c'},
+		{"verbose", no_argument, 0, 'v'}
+	};
+
+	while(opt >= 0) {
+		opt = getopt_long(argc, argv, "hp:b:c:v", loptions,
+			&option_index);
+
+		switch (opt) {
+			case 'h':
+				usage();
+				return EXIT_SUCCESS;
+			case 'p':
+				serial_port = optarg;
+				break;
+			case 'b':
+				baudrate = strtol(optarg, NULL, 10);
+				break;
+			case 'c':
+				ack_count = strtol(optarg, NULL, 10);
+				break;
+			case 'v':
+				verbose = 1;
+				break;
+		}
+	}
+
+	if(!serial_port) {
+		fprintf(stderr, "A serial port must be specified\n");
+		return EXIT_FAILURE;
+	}
+
+	// Generate the command line for austerus-core
+	asprintf(&cmd, 
+		"/usr/bin/env PATH=$PWD:$PATH austerus-core -p %s -b %d -c %d",
+		serial_port, baudrate, ack_count);
+
+	// Open the gcode output stream to austerus-core
+	stream_gcode = popen(cmd, "w");
+	free(cmd);
 
 	if (!stream_gcode)
 	{
@@ -87,7 +157,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	for (i=1; i<argc; i++) {
+	for (i=optind; i<argc; i++) {
 		stream_input = fopen(argv[i], "r");
 
 		if (stream_input == NULL) {
@@ -96,7 +166,7 @@ int main(int argc, char *argv[])
 		}
 
 		printf("printing file %s\n", argv[i]);
-		print_file(stream_gcode, stream_input);
+		print_file(stream_gcode, stream_input, verbose);
 		fclose(stream_input);
 		printf("finished printing file %s\n", argv[i]);
 	}

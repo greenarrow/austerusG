@@ -9,6 +9,7 @@
 
 #include "serial.h"
 #include "austerus-core.h"
+#include "defaults.h"
 
 
 // User options. Global for signal handler.
