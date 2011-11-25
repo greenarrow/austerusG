@@ -6,7 +6,6 @@
 #include <sys/wait.h>
 
 #include "austerus-send.h"
-#include "defaults.h"
 
 
 // Print a time in seconds as HH:MM:SS
@@ -95,8 +94,6 @@ int main(int argc, char *argv[])
 	FILE *stream_input;
 
 	char *serial_port = NULL;
-	unsigned int ack_count = DEFAULT_ACK_COUNT;
-	int baudrate = DEFAULT_BAUDRATE;
 	int verbose = 0;
 
 	char *cmd = NULL;	// Command string to execute austerus-core
@@ -114,6 +111,9 @@ int main(int argc, char *argv[])
 		{"verbose", no_argument, 0, 'v'}
 	};
 
+	// Generate the command line for austerus-core
+	asprintf(&cmd, "/usr/bin/env PATH=$PWD:$PATH");
+
 	while(opt >= 0) {
 		opt = getopt_long(argc, argv, "hp:b:c:v", loptions,
 			&option_index);
@@ -124,28 +124,30 @@ int main(int argc, char *argv[])
 				return EXIT_SUCCESS;
 			case 'p':
 				serial_port = optarg;
+				asprintf(&cmd, "%s AG_SERIALPORT=%s", cmd,
+					optarg);
 				break;
 			case 'b':
-				baudrate = strtol(optarg, NULL, 10);
+				asprintf(&cmd, "%s AG_BAUDRATE=%ld", cmd,
+					strtol(optarg, NULL, 10));
 				break;
 			case 'c':
-				ack_count = strtol(optarg, NULL, 10);
+				asprintf(&cmd, "%s AG_ACKCOUNT=%ld", cmd,
+					strtol(optarg, NULL, 10));
 				break;
 			case 'v':
 				verbose = 1;
+				asprintf(&cmd, "%s AG_VERBOSE=1", cmd);
 				break;
 		}
 	}
 
-	if(!serial_port) {
+	if (!serial_port & !getenv("AG_SERIALPORT")) {
 		fprintf(stderr, "A serial port must be specified\n");
 		return EXIT_FAILURE;
 	}
 
-	// Generate the command line for austerus-core
-	asprintf(&cmd, 
-		"/usr/bin/env PATH=$PWD:$PATH austerus-core -p %s -b %d -c %d",
-		serial_port, baudrate, ack_count);
+	asprintf(&cmd, "%s austerus-core", cmd);
 
 	// Open the gcode output stream to austerus-core
 	stream_gcode = popen(cmd, "w");

@@ -38,8 +38,7 @@ void usage(void) {
 
 // Main function
 int main(int argc, char* argv[]) {
-
-	unsigned int ack_count = DEFAULT_ACK_COUNT;
+	// Number of outstanding acknowledgements
 	unsigned int ack_outstanding = 0;
 
 	ssize_t bytes_r, bytes_w;
@@ -49,54 +48,31 @@ int main(int argc, char* argv[]) {
 	char line_feedback[SERIAL_LINE_LEN];
 
 	// User options
-	int baudrate = DEFAULT_BAUDRATE;
-	int serial_timeout = DEFAULT_TIMEOUT;
+	int baudrate		= DEFAULT_BAUDRATE;
+	int serial_timeout	= DEFAULT_TIMEOUT;
+	unsigned int ack_count	= DEFAULT_ACKCOUNT;
 
 	// Bind to SIGINT for cleanup
 	signal(SIGINT, leave);
 
 	// Read environmental variables
-	filename = getenv("ASG_OUTPUT_FILENAME");
+	filename	= getenv("AG_DUMP");
+	serial_port	= getenv("AG_SERIALPORT");
 
-	// Read command line options
-	int option_index = 0, opt=0;
-	static struct option loptions[] = {
-		{"help", no_argument, 0, 'h'},
-		{"port", required_argument, 0, 'p'},
-		{"baud", required_argument, 0, 'b'},
-		{"ack-count", required_argument, 0, 'c'},
-		{"verbose", no_argument, 0, 'v'}
-	};
+	if (getenv("AG_BAUDRATE"))
+		baudrate = strtol(getenv("AG_BAUDRATE"), NULL, 10);
 
-	while(opt >= 0) {
-		opt = getopt_long(argc, argv, "hp:b:c:v", loptions,
-			&option_index);
+	if (getenv("AG_ACKCOUNT"))
+		ack_count = strtol(getenv("AG_ACKCOUNT"), NULL, 10);
 
-		switch (opt) {
-			case 'h':
-				usage();
-				return EXIT_SUCCESS;
-			case 'p':
-				serial_port = optarg;
-				break;
-			case 'b':
-				baudrate = strtol(optarg, NULL, 10);
-				break;
-			case 'c':
-				ack_count = strtol(optarg, NULL, 10);
-				break;
-			case 'v':
-				verbose = 1;
-				break;
-		}
-	}
+	if (getenv("AG_VERBOSE"))
+		verbose = strtol(getenv("AG_VERBOSE"), NULL, 10);
 
 	if (verbose > 0)
 		printf("verbose mode\n");
 
 	// Initalise serial port if required
 	if (serial_port) {
-
 		if (verbose > 0)
 			printf("opening serial port %s\n", serial_port);
 
