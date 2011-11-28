@@ -79,6 +79,31 @@ int serial_init(const char* serialport, int baud) {
 			brate=B115200;
 			break;
 #endif
+#ifdef B250000
+		case 250000:
+			brate=B250000;
+			break;
+#endif
+#ifdef B230400
+		case 230400:
+			brate=B230400;
+			break;
+#endif
+#ifdef B460800
+		case 460800:
+			brate=B460800;
+			break;
+#endif
+#ifdef B500000
+		case 500000:
+			brate=B460800;
+			break;
+#endif
+#ifdef B576000
+		case 576000:
+			brate=B576000;
+			break;
+#endif
 		default:
 			perror("Invalid baudrate");
 			return -1;
