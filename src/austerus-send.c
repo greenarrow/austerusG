@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/wait.h>
+#include <string.h>
 
 #include "austerus-send.h"
 
@@ -39,6 +40,19 @@ void print_status(int pct, int taken, int estimate) {
 }
 
 
+// Strip out comments from line
+ssize_t filter_comments(char *line) {
+	int i = 0;
+	for (i=0; i<strlen(line); i++) {
+		if (line[i] == '(' || line[i] == ';') {
+			line[i] = '\n';
+			line[i + 1] = '\0';
+		}
+	}
+	return i;
+}
+
+
 // Print gcode from stream_input to austerus-core on stream_gcode
 void print_file(FILE *stream_gcode, FILE *stream_input, int verbose) {
 	int i;
@@ -53,15 +67,15 @@ void print_file(FILE *stream_gcode, FILE *stream_input, int verbose) {
 	printf("     taken  remaining\n");
 
 	while (nbytes != -1) {
-	
+		// Read the next line from file
 		nbytes = getline(&line, &line_len, stream_input);
-
-		if (line[0] == ';')
-			continue;
+		// Strip out any comments
+		nbytes = filter_comments(line);
 
 		if (nbytes <= 0)
 			continue;
 
+		// Write the file to the core
 		fprintf(stream_gcode, "%s", line);
 		fflush(stream_gcode);
 
