@@ -59,6 +59,12 @@ int main(int argc, char* argv[]) {
 	filename	= getenv("AG_DUMP");
 	serial_port	= getenv("AG_SERIALPORT");
 
+	// Allow special NULL string to disable serial port for testing.
+	if (serial_port) {
+		if (strcmp(serial_port, "NULL") == 0)
+			serial_port = NULL;
+	}
+
 	if (getenv("AG_BAUDRATE"))
 		baudrate = strtol(getenv("AG_BAUDRATE"), NULL, 10);
 
