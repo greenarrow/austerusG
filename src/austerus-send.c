@@ -43,7 +43,7 @@ void print_status(int pct, int taken, int estimate) {
 // Strip out comments from line
 ssize_t filter_comments(char *line) {
 	int i = 0;
-	for (i=0; i<strlen(line); i++) {
+	for (i=0; i<strlen(line) - 1; i++) {
 		if (line[i] == '(' || line[i] == ';') {
 			line[i] = '\n';
 			line[i + 1] = '\0';
@@ -69,10 +69,13 @@ void print_file(FILE *stream_gcode, FILE *stream_input, int verbose) {
 	while (nbytes != -1) {
 		// Read the next line from file
 		nbytes = getline(&line, &line_len, stream_input);
+		if (nbytes < 0)
+			break;
+
 		// Strip out any comments
 		nbytes = filter_comments(line);
 
-		if (nbytes <= 0)
+		if (nbytes == 0)
 			continue;
 
 		// Write the file to the core
