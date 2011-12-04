@@ -281,12 +281,11 @@ int main(int argc, char* argv[]) {
 		{"help", no_argument, 0, 'h'},
 		{"port", required_argument, 0, 'p'},
 		{"baud", required_argument, 0, 'b'},
-		{"ack-count", required_argument, 0, 'c'},
 		{"verbose", no_argument, 0, 'v'}
 	};
 
 	// Generate the command line for austerus-core
-	asprintf(&cmd, "/usr/bin/env PATH=$PWD:$PATH");
+	asprintf(&cmd, "/usr/bin/env AG_ACKCOUNT=1 PATH=$PWD:$PATH");
 
 	while(opt >= 0) {
 		opt = getopt_long(argc, argv, "hp:b:c:v", loptions,
@@ -303,10 +302,6 @@ int main(int argc, char* argv[]) {
 				break;
 			case 'b':
 				asprintf(&cmd, "%s AG_BAUDRATE=%ld", cmd,
-					strtol(optarg, NULL, 10));
-				break;
-			case 'c':
-				asprintf(&cmd, "%s AG_ACKCOUNT=%ld", cmd,
 					strtol(optarg, NULL, 10));
 				break;
 			case 'v':
@@ -626,7 +621,6 @@ int main(int argc, char* argv[]) {
 
 		if (time(NULL) - last_temp > TEMP_PERIOD)
 		{
-
 			do {
 				nbytes = nonblock_getline(&line_feedback, stream_feedback);
 				
