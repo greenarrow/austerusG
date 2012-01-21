@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	asprintf(&cmd, "%s austerus-core", cmd);
+	asprintf(&cmd, "%s austerus-core > /dev/null", cmd);
 
 	// Open the gcode output stream to austerus-core
 	stream_gcode = popen(cmd, "w");
