@@ -34,10 +34,6 @@ void print_status(int pct, int taken, int estimate) {
 
 	taken = estimate * pct / 100;
 	printf("] ");
-
-	print_time(taken);
-	printf("  ");
-	print_time(estimate - taken);
 }
 
 
@@ -68,8 +64,6 @@ void print_file(FILE *stream_gcode, FILE *stream_input, size_t lines,
 
 	for(i=0; i<BAR_WIDTH; i++)
 		printf(" ");
-
-	printf("     taken  remaining\n");
 
 	while (nbytes != -1) {
 		// Read the next line from file
