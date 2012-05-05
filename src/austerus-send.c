@@ -183,6 +183,8 @@ int main(int argc, char *argv[])
 	}
 
 	for (i=optind; i<argc; i++) {
+		printf("starting print: %s\n", argv[i]);
+
 		stream_input = fopen(argv[i], "r");
 
 		if (stream_input == NULL) {
@@ -190,25 +192,26 @@ int main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 
-		printf("printing file %s\n", argv[i]);
 		print_file(stream_gcode, stream_input, verbose);
+
 		fclose(stream_input);
-		printf("finished printing file %s\n", argv[i]);
+
+		printf("completed print: %s\n", argv[i]);
 	}
 
 	// Tell core to exit
 	fprintf(stream_gcode, "#ag:exit\n");
 	fflush(stream_gcode);
 
-	printf("waiting for core to exit\n");
-
 	wait(&status);
-	printf("core exit = %d\n", status);
+
+	if (status != 0)
+		printf("bad exit from core: %d\n", status);
 
 	// Block until stream is closed
 	if (pclose(stream_gcode) != 0)
 	{
-		fprintf(stderr, "error closing stream\n");
+		perror("error closing stream");
 	}
 
 	return EXIT_SUCCESS;
