@@ -24,6 +24,9 @@ serial.o: src/serial.c
 stats.o: src/stats.c
 	$(CC) -c -o build/stats.o src/stats.c
 
+popen2.o: src/popen2.c
+	$(CC) -c -o build/popen2.o src/popen2.c
+
 clean:
 	rm austerus-send austerus-core build/*
 
