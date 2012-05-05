@@ -93,7 +93,7 @@ void print_file(FILE *stream_gcode, FILE *stream_input, size_t lines,
 		
 		if (tally > lines) {
 			fprintf(stderr, "Expected %lu valid lines, got more\n",
-				lines);
+				(long unsigned int) lines);
 			return;
 		}
 
@@ -118,7 +118,7 @@ void print_file(FILE *stream_gcode, FILE *stream_input, size_t lines,
 
 	if (tally != lines) {
 		fprintf(stderr, "Expected %lu valid lines, got more %lu\n",
-			lines, tally);
+			(long unsigned int) lines, (long unsigned int) tally);
 		abort();
 	}
 
