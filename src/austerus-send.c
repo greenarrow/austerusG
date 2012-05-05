@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <string.h>
 
+#include "stats.h"
 #include "austerus-send.h"
 
 
@@ -54,12 +55,16 @@ ssize_t filter_comments(char *line) {
 
 
 // Print gcode from stream_input to austerus-core on stream_gcode
-void print_file(FILE *stream_gcode, FILE *stream_input, int verbose) {
+void print_file(FILE *stream_gcode, FILE *stream_input, size_t lines,
+		unsigned int filament, unsigned int *table, int verbose) {
 	int i;
 
 	char *line = NULL;
 	size_t line_len = 0;
 	ssize_t nbytes;
+	size_t tally = 0;
+
+	int pcta = 0, pctb = 0;
 
 	for(i=0; i<BAR_WIDTH; i++)
 		printf(" ");
@@ -90,6 +95,37 @@ void print_file(FILE *stream_gcode, FILE *stream_input, int verbose) {
 
 		if (verbose)
 			printf("%s", line);
+
+		
+		if (tally > lines) {
+			fprintf(stderr, "Expected %lu valid lines, got more\n",
+				lines);
+			return;
+		}
+
+		/*
+		 * TODO currently based on lines sent tally but should be based
+		 * on count returned ACKs!
+		 */
+		pctb = 100 * table[tally] / filament;
+
+		if (pcta != pctb) {
+			pcta = pctb;
+
+			printf("\r");
+			print_status(pcta, 0, 0);
+			fflush(stdout);
+		}
+
+		tally++;
+	}
+
+	printf("\n");
+
+	if (tally != lines) {
+		fprintf(stderr, "Expected %lu valid lines, got more %lu\n",
+			lines, tally);
+		abort();
 	}
 
 	if (line)
@@ -123,6 +159,11 @@ int main(int argc, char *argv[])
 
 	int status;
 	int i;
+
+	unsigned int *table = NULL;
+	int n = 0;
+	size_t lines = 0;
+	float filament = 0.0;
 
 	// Read command line options
 	int option_index = 0, opt=0;
@@ -192,11 +233,18 @@ int main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 
-		print_file(stream_gcode, stream_input, verbose);
+		filament = get_progress_table(&table, &lines, stream_input);
+		printf("total filament length: %fmm\n", filament);
+
+		rewind(stream_input);
+		print_file(stream_gcode, stream_input, lines,
+				(unsigned int) filament, table, verbose);
 
 		fclose(stream_input);
 
 		printf("completed print: %s\n", argv[i]);
+
+		free(table);
 	}
 
 	// Tell core to exit
