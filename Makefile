@@ -5,9 +5,9 @@ all: objdir austerus-send austerus-core
 objdir:
 	mkdir -p build
 
-austerus-send: stats.o serial.o austerus-send.o
-	$(CC) -o austerus-send build/stats.o build/serial.o \
-		build/austerus-send.o
+austerus-send: nbgetline.o popen2.o stats.o serial.o austerus-send.o
+	$(CC) -o austerus-send build/nbgetline.o build/popen2.o build/stats.o \
+		build/serial.o build/austerus-send.o
 
 austerus-core: serial.o austerus-core.o
 	$(CC) -o austerus-core build/serial.o build/austerus-core.o

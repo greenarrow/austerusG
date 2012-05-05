@@ -5,7 +5,10 @@
 #include <getopt.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <fcntl.h>
 
+#include "popen2.h"
+#include "nbgetline.h"
 #include "stats.h"
 #include "austerus-send.h"
 
@@ -143,7 +146,10 @@ void usage(void) {
 
 int main(int argc, char *argv[])
 {
+	int pipe_gcode = 0, pipe_feedback = 0;
+
 	FILE *stream_gcode;
+	FILE *stream_feedback;
 	FILE *stream_input;
 
 	char *serial_port = NULL;
@@ -207,13 +213,23 @@ int main(int argc, char *argv[])
 
 	asprintf(&cmd, "%s austerus-core > /dev/null", cmd);
 
-	// Open the gcode output stream to austerus-core
-	stream_gcode = popen(cmd, "w");
+	// Open the input and output streams to austerus-core
+	popen2(cmd, &pipe_gcode, &pipe_feedback);
 	free(cmd);
 
-	if (!stream_gcode)
-	{
-		fprintf(stderr, "incorrect parameters or too many files.\n");
+	// Make feedback pipe non-blocking
+	fcntl(pipe_feedback, F_SETFL, O_NONBLOCK);
+
+	stream_gcode = fdopen(pipe_gcode, "w");
+	stream_feedback = fdopen(pipe_feedback, "r");
+
+	if (!stream_gcode) {
+		fprintf(stderr, "unable to open output stream\n");
+		return EXIT_FAILURE;
+	}
+
+	if (!stream_feedback) {
+		fprintf(stderr, "unable to open feedback stream\n");
 		return EXIT_FAILURE;
 	}
 
@@ -252,9 +268,13 @@ int main(int argc, char *argv[])
 
 	// Block until stream is closed
 	if (pclose(stream_gcode) != 0)
-	{
 		perror("error closing stream");
-	}
+
+	if (pclose(stream_feedback) != 0)
+		perror("error closing stream");
+
+	close(pipe_gcode);
+	close(pipe_feedback);
 
 	return EXIT_SUCCESS;
 }
