@@ -78,6 +78,12 @@ void print_file(FILE *stream_gcode, FILE *stream_input, int verbose) {
 		if (nbytes == 0)
 			continue;
 
+		if (nbytes == 1 && line[0] == '\n')
+			continue;
+
+		if (nbytes == 2 && line[0] == '\t' && line[1] == '\n')
+			continue;
+
 		// Write the file to the core
 		fprintf(stream_gcode, "%s", line);
 		fflush(stream_gcode);
