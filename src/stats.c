@@ -55,8 +55,6 @@ int read_extruded_delta(char *line, int *mode, float *delta, float *position)
 	char prefix = 0;
 	unsigned int code = 0;
 
-	float previous = 0.0;
-
 	FILE *buffer = fmemopen(line, strlen(line), "r");
 
 	if (fscanf(buffer, "%c%u", &prefix, &code) != 2)
