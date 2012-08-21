@@ -6,8 +6,8 @@ objdir:
 	mkdir -p build
 
 austerus-panel: nbgetline.o popen2.o serial.o austerus-panel.o
-	$(CC) -o austerus-panel -lncurses -lform build/popen2.o build/nbgetline.o \
-        build/serial.o build/austerus-panel.o
+	$(CC) -o austerus-panel build/popen2.o build/nbgetline.o build/serial.o \
+		build/austerus-panel.o -lncurses -lform
 
 austerus-send: nbgetline.o popen2.o stats.o serial.o austerus-send.o
 	$(CC) -o austerus-send build/nbgetline.o build/popen2.o build/stats.o \
