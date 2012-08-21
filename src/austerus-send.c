@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	asprintf(&cmd, "%s austerus-core > /dev/null", cmd);
+	asprintf(&cmd, "%s austerus-core", cmd);
 
 	// Open the input and output streams to austerus-core
 	popen2(cmd, &pipe_gcode, &pipe_feedback);
