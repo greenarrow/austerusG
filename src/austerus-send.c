@@ -54,8 +54,9 @@ ssize_t filter_comments(char *line) {
 
 
 // Print gcode from stream_input to austerus-core on stream_gcode
-void print_file(FILE *stream_gcode, FILE *stream_input, size_t lines,
-		unsigned int filament, unsigned int *table, int verbose) {
+void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
+		size_t lines, unsigned int filament, unsigned int *table,
+		int verbose) {
 	int i;
 
 	char *line = NULL;
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
 		printf("total filament length: %fmm\n", filament);
 
 		rewind(stream_input);
-		print_file(stream_gcode, stream_input, lines,
+		print_file(stream_gcode, stream_feedback, stream_input, lines,
 				(unsigned int) filament, table, verbose);
 
 		fclose(stream_input);
