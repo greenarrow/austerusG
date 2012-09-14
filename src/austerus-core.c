@@ -3,7 +3,6 @@
 #include <signal.h>
 #include <termios.h>
 #include <string.h>
-#include <getopt.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 
@@ -20,20 +19,6 @@ char *filename = NULL;
 int serial;
 char *line_gcode = NULL;
 FILE *output_file = NULL;
-
-
-// Print help
-void usage(void) {
-	printf("Usage: austerus-core [OPTION]...\n"
-	"\n"
-	"Options:\n"
-	" -h, --help             Print this help message\n"
-	" -p, --port=serialport  Serial port Arduino is on\n"
-	" -b, --baud=baudrate    Baudrate (bps) of Arduino\n"
-	" -c, --ack-count        Set delayed ack count (1 is no delayed ack)\n"
-	" -v, --verbose          Print extra output\n"
-	"\n");
-}
 
 
 // Main function
