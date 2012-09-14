@@ -1,4 +1,8 @@
-CC = gcc -Wall
+PREFIX ?= /usr/local
+INSTALL ?= install
+BINDIR ?= $(PREFIX)/bin
+MANDIR ?= $(PREFIX)/share/man
+CC ?= gcc -Wall
 
 all: objdir austerus-panel austerus-send austerus-core
 
@@ -36,6 +40,12 @@ popen2.o: src/popen2.c
 
 nbgetline.o: src/nbgetline.c
 	$(CC) -c -o build/nbgetline.o src/nbgetline.c
+
+install:
+	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+	$(INSTALL) -m 0755 austerus-core $(DESTDIR)$(BINDIR)
+	$(INSTALL) -m 0755 austerus-send $(DESTDIR)$(BINDIR)
+	$(INSTALL) -m 0755 austerus-panel $(DESTDIR)$(BINDIR)
 
 clean:
 	rm austerus-panel austerus-send austerus-core build/*
