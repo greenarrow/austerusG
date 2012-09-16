@@ -62,7 +62,9 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 	char *line = NULL;
 	size_t line_len = 0;
 	ssize_t nbytes;
+	ssize_t fbytes;
 	size_t tally = 0;
+	char line_feedback[1024];
 
 	int pcta = 0, pctb = 0;
 
@@ -94,7 +96,13 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 		if (verbose)
 			printf("%s", line);
 
-		
+		// Read any available feedback lines
+		do {
+			fbytes = nonblock_getline(line_feedback, stream_feedback);
+			if (fbytes > 0 && verbose)
+				printf("FEEDBACK: %s\n", line_feedback);
+		} while (fbytes != -1);
+
 		if (tally > lines) {
 			fprintf(stderr, "Expected %lu valid lines, got more\n",
 				(long unsigned int) lines);
@@ -162,7 +170,6 @@ int main(int argc, char *argv[])
 	int i;
 
 	unsigned int *table = NULL;
-	int n = 0;
 	size_t lines = 0;
 	float filament = 0.0;
 
