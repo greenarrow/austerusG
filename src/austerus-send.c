@@ -113,7 +113,11 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 		 * TODO currently based on lines sent tally but should be based
 		 * on count returned ACKs!
 		 */
-		pctb = 100 * table[tally] / filament;
+
+		if (filament == 0)
+        	pctb = 0;
+		else
+			pctb = 100 * table[tally] / filament;
 
 		if (pcta != pctb) {
 			pcta = pctb;
