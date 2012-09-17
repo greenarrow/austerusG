@@ -56,7 +56,7 @@ ssize_t filter_comments(char *line) {
 // Print gcode from stream_input to austerus-core on stream_gcode
 void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 		size_t lines, unsigned int filament, unsigned int *table,
-		int verbose) {
+		int mode, int verbose) {
 	int i;
 
 	char *line = NULL;
@@ -68,8 +68,10 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 
 	int pcta = 0, pctb = 0;
 
-	for(i=0; i<BAR_WIDTH; i++)
-		printf(" ");
+	if (mode == NORMAL) {
+		for(i=0; i<BAR_WIDTH; i++)
+			printf(" ");
+	}
 
 	while (nbytes != -1) {
 		// Read the next line from file
@@ -115,22 +117,28 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 		 */
 
 		if (filament == 0)
-        	pctb = 0;
+			pctb = 0;
 		else
 			pctb = 100 * table[tally] / filament;
 
 		if (pcta != pctb) {
 			pcta = pctb;
 
-			printf("\r");
-			print_status(pcta, 0, 0);
+			if (mode == NORMAL) {
+				printf("\r");
+				print_status(pcta, 0, 0);
+			} else {
+				printf("%d%% complete\n", pcta);
+			}
+
 			fflush(stdout);
 		}
 
 		tally++;
 	}
 
-	printf("\n");
+	if (mode == NORMAL)
+		printf("\n");
 
 	if (tally != lines) {
 		fprintf(stderr, "Expected %lu valid lines, got more %lu\n",
@@ -152,6 +160,7 @@ void usage(void) {
 	" -p, --port=serialport  Serial port Arduino is on\n"
 	" -b, --baud=baudrate    Baudrate (bps) of Arduino\n"
 	" -c, --ack-count        Set delayed ack count (1 is no delayed ack)\n"
+	" -s, --stream           Run in stream mode\n"
 	" -v, --verbose          Print extra output\n"
 	"\n");
 }
@@ -166,6 +175,7 @@ int main(int argc, char *argv[])
 	FILE *stream_input;
 
 	char *serial_port = NULL;
+	int mode = NORMAL;
 	int verbose = 0;
 
 	char *cmd = NULL;	// Command string to execute austerus-core
@@ -184,6 +194,7 @@ int main(int argc, char *argv[])
 		{"port", required_argument, 0, 'p'},
 		{"baud", required_argument, 0, 'b'},
 		{"ack-count", required_argument, 0, 'c'},
+		{"stream", no_argument, 0, 's'},
 		{"verbose", no_argument, 0, 'v'}
 	};
 
@@ -191,7 +202,7 @@ int main(int argc, char *argv[])
 	asprintf(&cmd, "/usr/bin/env PATH=$PWD:$PATH");
 
 	while(opt >= 0) {
-		opt = getopt_long(argc, argv, "hp:b:c:v", loptions,
+		opt = getopt_long(argc, argv, "hp:b:c:sv", loptions,
 			&option_index);
 
 		switch (opt) {
@@ -210,6 +221,9 @@ int main(int argc, char *argv[])
 			case 'c':
 				asprintf(&cmd, "%s AG_ACKCOUNT=%ld", cmd,
 					strtol(optarg, NULL, 10));
+				break;
+			case 's':
+				mode = STREAM;
 				break;
 			case 'v':
 				verbose = 1;
@@ -256,11 +270,15 @@ int main(int argc, char *argv[])
 		}
 
 		filament = get_progress_table(&table, &lines, stream_input);
+		if (lines == 0) {
+			fprintf(stderr, "file contains no lines\n");
+			return EXIT_FAILURE;
+		}
 		printf("total filament length: %fmm\n", filament);
 
 		rewind(stream_input);
 		print_file(stream_gcode, stream_feedback, stream_input, lines,
-				(unsigned int) filament, table, verbose);
+				(unsigned int) filament, table, mode, verbose);
 
 		fclose(stream_input);
 
