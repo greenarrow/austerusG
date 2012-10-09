@@ -1,0 +1,46 @@
+.TH "AUSTERUS-CORE" "1"
+.SH NAME
+austerus-core \- Send gcode read from standard input to serial 3D printer.
+.SH DESCRIPTION
+.PP
+\fBausterus-core\fR is a simple program that reads lines of gcode from standard
+input and writes them to a serial port as fast as the printer accepts them.
+
+The program is kept as simple as possible to ensure the lowest possible
+latency. \fBausterus-core\fR is always used on the reading end of a pipe such
+that all data is queued in the pipe. This means the program writing to the pipe
+does not need to be concerned with real-time communication as long as it does
+not allow the pipe to become empty.
+
+.SH "ENVIRONMENT"
+\fBausterus-core\fR accepts no arguments as it is configured entirely using
+environment variables.
+
+.TP
+\fBAG_SERIALPORT\fR
+Serial port Arduino is on.
+.br
+A special value of "NULL" can be used to disable serial communications for
+testing.
+
+.TP
+\fBAG_BAUDRATE\fR
+Baudrate (bps) of Arduino.
+
+.TP
+\fBAG_ACKCOUNT\fR
+Set delayed ack count (1 is no delayed ack).
+.br
+If a guarantee of immediate feedback is required then a value of 1 should be
+set. Typically this is the case when being used by a control panel.
+
+.TP
+\fBAG_VERBOSE\fR
+Print extra output.
+
+.SH "OUTPUT"
+Data received from the serial port is written to standard output.
+
+.SH "AUTHOR"
+Written by Stefan Blanke
+
