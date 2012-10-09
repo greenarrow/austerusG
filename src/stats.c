@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <float.h>
 
 #include "stats.h"
 
@@ -27,17 +29,17 @@ int read_axis(FILE *stream, char target, float *value)
 /*
  * Read delta E and new E position from G1 move line.
  */
-void read_move(FILE *buffer, int mode, float *delta, float *position)
+void read_move(FILE *buffer, int mode, char axis, float *delta, float *position)
 {
 	float previous = *position;
 
 	switch (mode) {
 		case ABSOLUTE:
-			read_axis(buffer, 'E', position);
+			read_axis(buffer, axis, position);
 			*delta = *position - previous;
 			break;
 		case RELATIVE:
-			read_axis(buffer, 'E', delta);
+			read_axis(buffer, axis, delta);
 			*position += *delta;
 			break;
 		default:
@@ -50,7 +52,8 @@ void read_move(FILE *buffer, int mode, float *delta, float *position)
 /*
  * Calculate the new E and delta E for a gcode line.
  */
-int read_extruded_delta(char *line, int *mode, float *delta, float *position)
+int read_axis_delta(char *line, const char axis, int *mode, float *delta,
+	float *position)
 {
 	char prefix = 0;
 	unsigned int code = 0;
@@ -65,7 +68,7 @@ int read_extruded_delta(char *line, int *mode, float *delta, float *position)
 			switch (code) {
 				case 1:
 					/* G1 Move */
-					read_move(buffer, *mode, delta,
+					read_move(buffer, *mode, axis, delta,
 							position);
 				case 90:
 					/* G90 Absolute Positioning */
@@ -77,7 +80,7 @@ int read_extruded_delta(char *line, int *mode, float *delta, float *position)
 					break;
 				case 92:
 					/* G92 Set */
-					read_axis(buffer, 'E', position);
+					read_axis(buffer, axis, position);
 					*delta = 0.0;
 					break;
 			}
@@ -125,7 +128,7 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
 		if (bytes == 0)
 			continue;
 
-		if (read_extruded_delta(line, &mode, &delta, &position) == 0)
+		if (read_axis_delta(line, 'E', &mode, &delta, &position) == 0)
 			continue;
 
 		extruded += delta;
@@ -149,3 +152,45 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
 	return extruded;
 }
 
+
+size_t get_extends(struct limit *bounds, const char *axes, FILE *stream)
+{
+	char *line = NULL;
+	size_t lines = 0;
+	size_t len = 0;
+	ssize_t bytes = 0;
+
+	int mode = NONE;
+
+	float delta[strlen(axes)];
+	float position[strlen(axes)];
+
+	int a = 0;
+
+	for (a=0; a<strlen(axes); a++) {
+		position[a] = 0.0;
+		delta[a] = 0.0;
+		bounds[a].min = FLT_MAX;
+		bounds[a].max = FLT_MIN;
+	}
+
+	while((bytes = getline(&line, &len, stream) != -1))
+	{
+		if (bytes == 0)
+			continue;
+
+		for (a=0; a<strlen(axes); a++) {
+			if (read_axis_delta(line, axes[a], &mode, &delta[a],
+				&position[a]) == 1) {
+				bounds[a].min = fminf(bounds[a].min, position[a]);
+				bounds[a].max = fmaxf(bounds[a].max, position[a]);
+			}
+		}
+
+		lines++;
+	}
+
+	free(line);
+
+	return lines;
+}

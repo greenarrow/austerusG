@@ -2,7 +2,18 @@
 #define ABSOLUTE    1
 #define RELATIVE    2
 
+
+struct limit {
+	float min;
+	float max;
+};
+
+
 int read_axis(FILE *stream, char target, float *value);
-void read_move(FILE *buffer, int mode, float *delta, float *position);
-int read_extruded_delta(char *line, int *mode, float *delta, float *position);
+void read_move(FILE *buffer, int mode, char axis, float *delta,
+	float *position);
+int read_axis_delta(char *line, const char axis, int *mode, float *delta,
+	float *position);
 float get_progress_table(unsigned int **table, size_t *lines, FILE *stream);
+size_t get_extends(struct limit *bounds, const char *axes, FILE *stream);
+

@@ -4,7 +4,7 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 CC ?= gcc -Wall -pedantic -Wno-long-long -Wno-deprecated -ansi
 
-all: objdir austerus-panel austerus-send austerus-core
+all: objdir austerus-panel austerus-send austerus-verge austerus-core
 
 objdir:
 	mkdir -p build
@@ -14,8 +14,11 @@ austerus-panel: nbgetline.o popen2.o serial.o austerus-panel.o
 		build/austerus-panel.o -lncurses -lform
 
 austerus-send: nbgetline.o popen2.o stats.o serial.o austerus-send.o
-	$(CC) -o austerus-send build/nbgetline.o build/popen2.o build/stats.o \
+	$(CC) -o austerus-send -lm build/nbgetline.o build/popen2.o build/stats.o \
 		build/serial.o build/austerus-send.o
+
+austerus-verge: stats.o austerus-verge.o
+	$(CC) -o austerus-verge -lm build/stats.o build/austerus-verge.o
 
 austerus-core: serial.o austerus-core.o
 	$(CC) -o austerus-core build/serial.o build/austerus-core.o
@@ -25,6 +28,9 @@ austerus-panel.o: src/austerus-panel.c
 
 austerus-send.o: src/austerus-send.c
 	$(CC) -c -o build/austerus-send.o src/austerus-send.c
+
+austerus-verge.o: src/austerus-verge.c
+	$(CC) -c -o build/austerus-verge.o src/austerus-verge.c
 
 austerus-core.o: src/austerus-core.c
 	$(CC) -c -o build/austerus-core.o src/austerus-core.c
@@ -50,5 +56,5 @@ install:
 	$(INSTALL) -m 0644 docs/austerus-core.1 $(DESTDIR)$(MANDIR)
 
 clean:
-	rm austerus-panel austerus-send austerus-core build/*
+	rm austerus-panel austerus-send austerus-core austerus-verge build/*
 
