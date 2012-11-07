@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 
 #include "serial.h"
+#include "protocol.h"
 #include "austerus-core.h"
 #include "defaults.h"
 

@@ -10,6 +10,7 @@
 #include "popen2.h"
 #include "nbgetline.h"
 #include "stats.h"
+#include "protocol.h"
 #include "austerus-send.h"
 
 
