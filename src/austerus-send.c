@@ -102,8 +102,14 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 		// Read any available feedback lines
 		do {
 			fbytes = nonblock_getline(line_feedback, stream_feedback);
-			if (fbytes > 0 && verbose)
-				printf("FEEDBACK: %s\n", line_feedback);
+			if (fbytes > 0) {
+				if (strncmp(line_feedback, MSG_ACK, MSG_ACK_LEN) == 0 ||
+					strncmp(line_feedback, MSG_DUD, MSG_DUD_LEN) == 0) {
+					tally++;
+				}
+				if (verbose)
+					printf("FEEDBACK: %s\n", line_feedback);
+			}
 		} while (fbytes != -1);
 
 		if (tally > lines) {
@@ -111,11 +117,6 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 				(long unsigned int) lines);
 			return;
 		}
-
-		/*
-		 * TODO currently based on lines sent tally but should be based
-		 * on count returned ACKs!
-		 */
 
 		if (filament == 0)
 			pctb = 0;
@@ -134,8 +135,6 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 
 			fflush(stdout);
 		}
-
-		tally++;
 	}
 
 	if (mode == NORMAL)
