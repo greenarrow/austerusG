@@ -2,7 +2,7 @@ PREFIX ?= /usr/local
 INSTALL ?= install
 BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
-CC ?= gcc -Wall
+CC ?= gcc -Wall -pedantic -Wno-long-long -Wno-deprecated -ansi
 
 all: objdir austerus-panel austerus-send austerus-core
 
