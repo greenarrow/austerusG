@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <getopt.h>
 #include <string.h>
 
@@ -14,6 +15,7 @@ void usage(void) {
 	"\n"
 	"Options:\n"
 	" -h, --help             Print this help message\n"
+	" -d, --deposition       Bounds of deposited material\n"
 	"\n");
 }
 
@@ -25,25 +27,35 @@ int main(int argc, char *argv[])
 	int verbose = 0;
 	int a = 0;
 
-	const char axes[] = "XY";
+	char axes[5];
 	struct limit bounds[4];
 	size_t lines = 0;
+
+	bool deposition = false;
 
 	// Read command line options
 	int option_index = 0, opt=0;
 	static struct option loptions[] = {
-		{"help", no_argument, 0, 'h'}
+		{"help", no_argument, 0, 'h'},
+		{"deposition", no_argument, 0, 'd'}
 	};
 
 	while(opt >= 0) {
-		opt = getopt_long(argc, argv, "h", loptions, &option_index);
+		opt = getopt_long(argc, argv, "hd", loptions, &option_index);
 
 		switch (opt) {
 			case 'h':
 				usage();
 				return EXIT_SUCCESS;
+			case 'd':
+				deposition = true;
 		}
 	}
+
+	if (deposition)
+		 strcpy(axes, "XYZE");
+	else
+		 strcpy(axes, "XYZ");
 
 	stream_input = fopen(argv[optind], "r");
 
@@ -52,7 +64,7 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	
-	lines = get_extends(bounds, axes, stream_input);
+	lines = get_extends(bounds, axes, deposition, stream_input);
 
 	if (lines == 0) {
 		fprintf(stderr, "read no lines\n");

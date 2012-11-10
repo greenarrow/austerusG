@@ -1,11 +1,25 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 #include <float.h>
 
 #include "stats.h"
+
+
+/*
+ * Return the position of axis in the axes string or -1 if no contained.
+ */
+int axis_position(const char *axes, char axis) {
+	char *found = strchr(axes, axis);
+
+	if (found == NULL)
+		return -1;
+
+	return found - axes;
+}
 
 
 /*
@@ -153,7 +167,14 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
 }
 
 
-size_t get_extends(struct limit *bounds, const char *axes, FILE *stream)
+/*
+ * Calculate the extends reached while printing gcode data.
+ * When deposition=false this includes all movements.
+ * When deposition=true this includes only movements that deposit material on
+ * the print bed.
+ */
+size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
+	FILE *stream)
 {
 	char *line = NULL;
 	size_t lines = 0;
@@ -162,10 +183,22 @@ size_t get_extends(struct limit *bounds, const char *axes, FILE *stream)
 
 	int mode = NONE;
 
+	int ix = axis_position(axes, 'X');
+	int iy = axis_position(axes, 'Y');
+	int iz = axis_position(axes, 'Z');
+	int ie = axis_position(axes, 'E');
+
+	if (deposition && ie == -1) {
+		fprintf(stderr, "axes XY are required in deposition mode\n");
+		abort();
+	}
+
 	float delta[strlen(axes)];
 	float position[strlen(axes)];
 
 	int a = 0;
+
+	bool started = false;
 
 	for (a=0; a<strlen(axes); a++) {
 		position[a] = 0.0;
@@ -181,12 +214,35 @@ size_t get_extends(struct limit *bounds, const char *axes, FILE *stream)
 
 		for (a=0; a<strlen(axes); a++) {
 			if (read_axis_delta(line, axes[a], &mode, &delta[a],
-				&position[a]) == 1) {
-				bounds[a].min = fminf(bounds[a].min, position[a]);
-				bounds[a].max = fmaxf(bounds[a].max, position[a]);
-			}
+				&position[a]) != 1)
+				continue;
+			/*
+			 * In deposition mode only record extends while
+			 * depositing
+			 */
+			if (deposition && (!started || delta[ie] == 0.0))
+				continue;
+
+			bounds[a].min = fminf(bounds[a].min, position[a]);
+			bounds[a].max = fmaxf(bounds[a].max, position[a]);
 		}
 
+		if (deposition && !started) {
+			/*
+			 * When print head is moved while extruding for first
+			 * time consider to have started printing.
+			 */
+			if (delta[ie] > 0.0 && delta[ix] + delta[iy] > 0.0) {
+				started = true;
+
+				for (a=0; a<strlen(axes); a++) {
+					bounds[a].min = fminf(bounds[a].min,
+						position[a] - delta[a]);
+					bounds[a].max = fmaxf(bounds[a].max,
+						position[a] - delta[a]);
+				}
+			}
+		}
 		lines++;
 	}
 
