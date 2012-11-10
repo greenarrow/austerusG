@@ -61,3 +61,7 @@ Simple program for printing gcode files while displaying progress.
 
 Simple *Ncurses* based control panel for 3D printers.
 
+### austerus-verge
+
+Output the region of the print bed that will be used when printing a gcode file.
+
