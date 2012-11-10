@@ -14,11 +14,11 @@ austerus-panel: nbgetline.o popen2.o serial.o austerus-panel.o
 		build/austerus-panel.o -lncurses -lform
 
 austerus-send: nbgetline.o popen2.o stats.o serial.o austerus-send.o
-	$(CC) -o austerus-send -lm build/nbgetline.o build/popen2.o build/stats.o \
-		build/serial.o build/austerus-send.o
+	$(CC) -o austerus-send build/nbgetline.o build/popen2.o build/stats.o \
+		build/serial.o build/austerus-send.o -lm
 
 austerus-verge: stats.o austerus-verge.o
-	$(CC) -o austerus-verge -lm build/stats.o build/austerus-verge.o
+	$(CC) -o austerus-verge build/stats.o build/austerus-verge.o -lm
 
 austerus-core: serial.o austerus-core.o
 	$(CC) -o austerus-core build/serial.o build/austerus-core.o
