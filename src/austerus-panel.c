@@ -622,7 +622,7 @@ int main(int argc, char* argv[]) {
 		if (time(NULL) - last_temp > TEMP_PERIOD)
 		{
 			do {
-				nbytes = nonblock_getline(&line_feedback, stream_feedback);
+				nbytes = nonblock_getline(line_feedback, stream_feedback);
 				
 				//nbytes = getline(&line_feedback, &line_feedback_len, stream_feedback);
 
