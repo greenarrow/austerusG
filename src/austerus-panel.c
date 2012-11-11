@@ -218,13 +218,12 @@ int end_axis(FILE *stream_gcode, char axis) {
 
 // Print usage to terminal
 void usage(void) {
-	printf("Usage: austerus-send [OPTION]... [FILE]...\n"
+	printf("Usage: austerus-panel [OPTION]...\n"
 	"\n"
 	"Options:\n"
 	" -h, --help             Print this help message\n"
 	" -p, --port=serialport  Serial port Arduino is on\n"
 	" -b, --baud=baudrate    Baudrate (bps) of Arduino\n"
-	" -c, --ack-count        Set delayed ack count (1 is no delayed ack)\n"
 	" -v, --verbose          Print extra output\n"
 	"\n");
 }
@@ -288,7 +287,7 @@ int main(int argc, char* argv[]) {
 	asprintf(&cmd, "/usr/bin/env AG_ACKCOUNT=1 PATH=$PWD:$PATH");
 
 	while(opt >= 0) {
-		opt = getopt_long(argc, argv, "hp:b:c:v", loptions,
+		opt = getopt_long(argc, argv, "hp:b:v", loptions,
 			&option_index);
 
 		switch (opt) {
