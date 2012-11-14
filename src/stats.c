@@ -25,18 +25,18 @@ int axis_position(const char *axes, char axis) {
 /*
  * Read a stream for the next occurrence of a value for the specified axis.
  */
-int read_axis(const char *line, char target, float *value)
+void read_axis(const char *line, char target, float *value)
 {
 	char axis = 0;
 	char *found = strchr(line, target);
 
 	if (found == NULL)
-		return 0;
+		return;
 	
-	if (sscanf(found, "%c%f", &axis, value) != 2)
-		return 0;
-
-	return 1;
+	if (sscanf(found, "%c%f", &axis, value) != 2) {
+		fprintf(stderr, "read_axis: Failed to read axis %c\n", target);
+		abort();
+	}
 }
 
 
@@ -54,11 +54,12 @@ void read_move(const char *line, int mode, char axis, float *delta,
 			*delta = *position - previous;
 			break;
 		case RELATIVE:
+			*delta = 0.0;
 			read_axis(line, axis, delta);
 			*position += *delta;
 			break;
 		default:
-			fprintf(stderr, "read_move: Positioning mode not set");
+			fprintf(stderr, "read_move: Positioning mode not set\n");
 			abort();
 	}
 }
