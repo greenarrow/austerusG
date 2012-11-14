@@ -25,35 +25,36 @@ int axis_position(const char *axes, char axis) {
 /*
  * Read a stream for the next occurrence of a value for the specified axis.
  */
-int read_axis(FILE *stream, char target, float *value)
+int read_axis(const char *line, char target, float *value)
 {
 	char axis = 0;
-	float previous = *value;
+	char *found = strchr(line, target);
 
-	while (fscanf(stream, " %c%f", &axis, value) == 2) {
-		if (axis == target)
-			return 1;
-	}
+	if (found == NULL)
+		return 0;
+	
+	if (sscanf(found, "%c%f", &axis, value) != 2)
+		return 0;
 
-	*value = previous;
-	return 0;
+	return 1;
 }
 
 
 /*
  * Read delta E and new E position from G1 move line.
  */
-void read_move(FILE *buffer, int mode, char axis, float *delta, float *position)
+void read_move(const char *line, int mode, char axis, float *delta,
+	float *position)
 {
 	float previous = *position;
 
 	switch (mode) {
 		case ABSOLUTE:
-			read_axis(buffer, axis, position);
+			read_axis(line, axis, position);
 			*delta = *position - previous;
 			break;
 		case RELATIVE:
-			read_axis(buffer, axis, delta);
+			read_axis(line, axis, delta);
 			*position += *delta;
 			break;
 		default:
@@ -66,15 +67,14 @@ void read_move(FILE *buffer, int mode, char axis, float *delta, float *position)
 /*
  * Calculate the new E and delta E for a gcode line.
  */
-int read_axis_delta(char *line, const char axis, int *mode, float *delta,
+int read_axis_delta(const char *line, const char axis, int *mode, float *delta,
 	float *position)
 {
 	char prefix = 0;
 	unsigned int code = 0;
 
-	FILE *buffer = fmemopen(line, strlen(line), "r");
 
-	if (fscanf(buffer, "%c%u", &prefix, &code) != 2)
+	if (sscanf(line, "%c%u", &prefix, &code) != 2)
 		return 0;
 
 	switch (prefix) {
@@ -82,8 +82,8 @@ int read_axis_delta(char *line, const char axis, int *mode, float *delta,
 			switch (code) {
 				case 1:
 					/* G1 Move */
-					read_move(buffer, *mode, axis, delta,
-							position);
+					read_move(line, *mode, axis, delta,
+						position);
 					break;
 				case 90:
 					/* G90 Absolute Positioning */
@@ -95,7 +95,7 @@ int read_axis_delta(char *line, const char axis, int *mode, float *delta,
 					break;
 				case 92:
 					/* G92 Set */
-					read_axis(buffer, axis, position);
+					read_axis(line, axis, position);
 					*delta = 0.0;
 					break;
 			}
@@ -107,7 +107,6 @@ int read_axis_delta(char *line, const char axis, int *mode, float *delta,
 			return 0;
 	}
 
-	fclose(buffer);
 	return 1;
 }
 
