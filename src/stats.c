@@ -84,6 +84,7 @@ int read_axis_delta(char *line, const char axis, int *mode, float *delta,
 					/* G1 Move */
 					read_move(buffer, *mode, axis, delta,
 							position);
+					break;
 				case 90:
 					/* G90 Absolute Positioning */
 					*mode = ABSOLUTE;
