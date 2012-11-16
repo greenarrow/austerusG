@@ -55,9 +55,17 @@ ssize_t filter_comments(char *line) {
 
 
 // Print gcode from stream_input to austerus-core on stream_gcode
-void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
-		size_t lines, unsigned int filament, unsigned int *table,
-		int mode, int verbose) {
+void print_file(FILE *stream_input, size_t lines, const char *cmd,
+	unsigned int filament, unsigned int *table, int mode, int verbose) {
+
+	int pipe_gcode = 0;
+	int pipe_feedback = 0;
+
+	FILE *stream_gcode = NULL;
+	FILE *stream_feedback = NULL;
+
+	int status;
+
 	int i;
 
 	char *line = NULL;
@@ -68,6 +76,27 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 	char line_feedback[1024];
 
 	int pcta = 0, pctb = 0;
+
+	pid_t pid;
+
+	// Open the input and output streams to austerus-core
+	pid = popen2(cmd, &pipe_gcode, &pipe_feedback);
+
+	// Make feedback pipe non-blocking
+	fcntl(pipe_feedback, F_SETFL, O_NONBLOCK);
+
+	stream_gcode = fdopen(pipe_gcode, "w");
+	stream_feedback = fdopen(pipe_feedback, "r");
+
+	if (!stream_gcode) {
+		fprintf(stderr, "unable to open output stream\n");
+		abort();
+	}
+
+	if (!stream_feedback) {
+		fprintf(stderr, "unable to open feedback stream\n");
+		abort();
+	}
 
 	if (mode == NORMAL) {
 		for(i=0; i<BAR_WIDTH; i++)
@@ -97,18 +126,22 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 		fflush(stream_gcode);
 
 		if (verbose)
-			printf("%s", line);
+			printf("SEND: %s", line);
 
 		// Read any available feedback lines
 		do {
-			fbytes = nonblock_getline(line_feedback, stream_feedback);
+			fbytes = nonblock_getline(line_feedback,
+				stream_feedback);
 			if (fbytes > 0) {
-				if (strncmp(line_feedback, MSG_ACK, MSG_ACK_LEN) == 0 ||
-					strncmp(line_feedback, MSG_DUD, MSG_DUD_LEN) == 0) {
+				if (strncmp(line_feedback, MSG_ACK,
+						MSG_ACK_LEN) == 0 ||
+					strncmp(line_feedback, MSG_DUD,
+						MSG_DUD_LEN) == 0) {
 					tally++;
 				}
 				if (verbose)
-					printf("FEEDBACK: %s\n", line_feedback);
+					printf("FEEDBACK: %s\n",
+						line_feedback);
 			}
 		} while (fbytes != -1);
 
@@ -140,14 +173,68 @@ void print_file(FILE *stream_gcode, FILE *stream_feedback, FILE *stream_input,
 	if (mode == NORMAL)
 		printf("\n");
 
+	// Tell core to exit
+	fprintf(stream_gcode, "#ag:exit\n");
+	fflush(stream_gcode);
+
+	/*
+	 * Now we have written and flushed all outgoing gcode we can close the
+	 * pipe leaving the core to finish reading the data.
+	 */
+
+	// Block until stream is closed
+	if (pclose(stream_gcode) != 0)
+		perror("error closing stream");
+
+	close(pipe_gcode);
+	wait(&status);
+
+	/*
+	 * Read any remaining data from the feedback pipe until the core has
+	 * exited.
+	 */
+
+	while (1) {
+		fbytes = nonblock_getline(line_feedback, stream_feedback);
+		if (fbytes == -1) {
+			if (kill(pid, 0) == 0)
+				usleep(100);
+			else
+				break;
+		}
+
+		if (fbytes > 0) {
+			if (strncmp(line_feedback, MSG_ACK,
+					MSG_ACK_LEN) == 0 ||
+				strncmp(line_feedback, MSG_DUD,
+					MSG_DUD_LEN) == 0) {
+				tally++;
+			}
+			if (verbose)
+				printf("FEEDBACK (post): %s\n", line_feedback);
+
+			/*
+			 * TODO We should still be updating progress here */
+		}
+	}
+
 	if (tally != lines) {
 		fprintf(stderr, "Expected %lu valid lines, got more %lu\n",
 			(long unsigned int) lines, (long unsigned int) tally);
 		abort();
 	}
 
+
+	if (status != 0)
+		printf("bad exit from core: %d\n", status);
+
+	if (pclose(stream_feedback) != 0)
+		perror("error closing stream");
+
 	if (line)
 		free(line);
+
+	close(pipe_feedback);
 }
 
 
@@ -168,10 +255,6 @@ void usage(void) {
 
 int main(int argc, char *argv[])
 {
-	int pipe_gcode = 0, pipe_feedback = 0;
-
-	FILE *stream_gcode;
-	FILE *stream_feedback;
 	FILE *stream_input;
 
 	char *serial_port = NULL;
@@ -180,7 +263,6 @@ int main(int argc, char *argv[])
 
 	char *cmd = NULL;	// Command string to execute austerus-core
 
-	int status;
 	int i;
 
 	unsigned int *table = NULL;
@@ -239,26 +321,6 @@ int main(int argc, char *argv[])
 
 	asprintf(&cmd, "%s austerus-core", cmd);
 
-	// Open the input and output streams to austerus-core
-	popen2(cmd, &pipe_gcode, &pipe_feedback);
-	free(cmd);
-
-	// Make feedback pipe non-blocking
-	fcntl(pipe_feedback, F_SETFL, O_NONBLOCK);
-
-	stream_gcode = fdopen(pipe_gcode, "w");
-	stream_feedback = fdopen(pipe_feedback, "r");
-
-	if (!stream_gcode) {
-		fprintf(stderr, "unable to open output stream\n");
-		return EXIT_FAILURE;
-	}
-
-	if (!stream_feedback) {
-		fprintf(stderr, "unable to open feedback stream\n");
-		return EXIT_FAILURE;
-	}
-
 	for (i=optind; i<argc; i++) {
 		printf("starting print: %s\n", argv[i]);
 
@@ -277,8 +339,8 @@ int main(int argc, char *argv[])
 		printf("total filament length: %fmm\n", filament);
 
 		rewind(stream_input);
-		print_file(stream_gcode, stream_feedback, stream_input, lines,
-				(unsigned int) filament, table, mode, verbose);
+		print_file(stream_input, lines, cmd, (unsigned int) filament, table,
+			mode, verbose);
 
 		fclose(stream_input);
 
@@ -287,25 +349,7 @@ int main(int argc, char *argv[])
 		free(table);
 	}
 
-	// Tell core to exit
-	fprintf(stream_gcode, "#ag:exit\n");
-	fflush(stream_gcode);
-
-	wait(&status);
-
-	if (status != 0)
-		printf("bad exit from core: %d\n", status);
-
-	// Block until stream is closed
-	if (pclose(stream_gcode) != 0)
-		perror("error closing stream");
-
-	if (pclose(stream_feedback) != 0)
-		perror("error closing stream");
-
-	close(pipe_gcode);
-	close(pipe_feedback);
-
+	free(cmd);
 	return EXIT_SUCCESS;
 }
 
