@@ -173,10 +173,6 @@ void print_file(FILE *stream_input, size_t lines, const char *cmd,
 	if (mode == NORMAL)
 		printf("\n");
 
-	// Tell core to exit
-	fprintf(stream_gcode, "#ag:exit\n");
-	fflush(stream_gcode);
-
 	/*
 	 * Now we have written and flushed all outgoing gcode we can close the
 	 * pipe leaving the core to finish reading the data.
