@@ -237,6 +237,12 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			if (read_axis_delta(line, axes[a], &mode, &delta[a],
 				&position[a], &offset[a]) != 1)
 				continue;
+
+			if (verbose)
+				fprintf(stderr, "STATE: deposition %d, "
+					"started %d, delta[E] %f\n",
+					deposition, started, delta[ie]);
+
 			/*
 			 * In deposition mode only record extends while
 			 * depositing
@@ -257,12 +263,20 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 		}
 
 		if (deposition && !started) {
+			if (verbose)
+				fprintf(stderr, "START CONSIDER: delta[E] %f, "
+					"delta[X] %f, delta[Y] %f\n", delta[ie],
+					delta[ix], delta[iy]);
+
 			/*
 			 * When print head is moved while extruding for first
 			 * time consider to have started printing.
 			 */
 			if (delta[ie] > 0.0 && delta[ix] + delta[iy] > 0.0) {
 				started = true;
+
+				if (verbose)
+					fprintf(stderr, "DEPOSITION STARTED\n");
 
 				for (a=0; a<strlen(axes); a++) {
 					bounds[a].min = fminf(bounds[a].min,
