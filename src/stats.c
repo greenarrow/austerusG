@@ -25,18 +25,20 @@ int axis_position(const char *axes, char axis) {
 /*
  * Read a stream for the next occurrence of a value for the specified axis.
  */
-void read_axis(const char *line, char target, float *value)
+bool read_axis(const char *line, char target, float *value)
 {
 	char axis = 0;
 	char *found = strchr(line, target);
 
 	if (found == NULL)
-		return;
+		return false;
 	
 	if (sscanf(found, "%c%f", &axis, value) != 2) {
 		fprintf(stderr, "read_axis: Failed to read axis %c\n", target);
 		abort();
 	}
+
+	return true;
 }
 
 
@@ -69,11 +71,12 @@ void read_move(const char *line, int mode, char axis, float *delta,
  * Calculate the new E and delta E for a gcode line.
  */
 int read_axis_delta(const char *line, const char axis, int *mode, float *delta,
-	float *position)
+	float *position, float *offset)
 {
 	char prefix = 0;
 	unsigned int code = 0;
 
+	float ignore = 0.0;
 
 	if (sscanf(line, "%c%u", &prefix, &code) != 2)
 		return 0;
@@ -86,6 +89,13 @@ int read_axis_delta(const char *line, const char axis, int *mode, float *delta,
 					read_move(line, *mode, axis, delta,
 						position);
 					break;
+				case 28:
+					/* G28 Home */
+					if (read_axis(line, axis, &ignore)) {
+						*position = 0.0;
+						*offset = 0.0;
+					}
+					break;
 				case 90:
 					/* G90 Absolute Positioning */
 					*mode = ABSOLUTE;
@@ -96,7 +106,10 @@ int read_axis_delta(const char *line, const char axis, int *mode, float *delta,
 					break;
 				case 92:
 					/* G92 Set */
+					*offset -= *position;
 					read_axis(line, axis, position);
+
+					*offset += *position;
 					*delta = 0.0;
 					break;
 			}
@@ -128,6 +141,7 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
 	float position = 0.0;
 	float extruded = 0.0;
 	float delta = 0.0;
+	float offset = 0.0;
 
 	int mode = NONE;
 
@@ -143,7 +157,8 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
 		if (bytes == 0)
 			continue;
 
-		if (read_axis_delta(line, 'E', &mode, &delta, &position) == 0)
+		if (read_axis_delta(line, 'E', &mode, &delta, &position,
+			&offset) == 0)
 			continue;
 
 		extruded += delta;
@@ -175,7 +190,7 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
  * the print bed.
  */
 size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
-	FILE *stream)
+	bool physical, FILE *stream)
 {
 	char *line = NULL;
 	size_t lines = 0;
@@ -196,6 +211,7 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 
 	float delta[strlen(axes)];
 	float position[strlen(axes)];
+	float offset[strlen(axes)];
 
 	int a = 0;
 
@@ -204,6 +220,7 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 	for (a=0; a<strlen(axes); a++) {
 		position[a] = 0.0;
 		delta[a] = 0.0;
+		offset[a] = 0.0;
 		bounds[a].min = FLT_MAX;
 		bounds[a].max = FLT_MIN;
 	}
@@ -215,7 +232,7 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 
 		for (a=0; a<strlen(axes); a++) {
 			if (read_axis_delta(line, axes[a], &mode, &delta[a],
-				&position[a]) != 1)
+				&position[a], &offset[a]) != 1)
 				continue;
 			/*
 			 * In deposition mode only record extends while
@@ -224,8 +241,10 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			if (deposition && (!started || delta[ie] == 0.0))
 				continue;
 
-			bounds[a].min = fminf(bounds[a].min, position[a]);
-			bounds[a].max = fmaxf(bounds[a].max, position[a]);
+			bounds[a].min = fminf(bounds[a].min,
+				position[a] - (physical ? offset[a]: 0.0));
+			bounds[a].max = fmaxf(bounds[a].max,
+				position[a] - (physical ? offset[a] : 0.0));
 		}
 
 		if (deposition && !started) {
@@ -238,9 +257,12 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 
 				for (a=0; a<strlen(axes); a++) {
 					bounds[a].min = fminf(bounds[a].min,
-						position[a] - delta[a]);
+						position[a] - delta[a] -
+						(physical ? offset[a] : 0.0));
+
 					bounds[a].max = fmaxf(bounds[a].max,
-						position[a] - delta[a]);
+						position[a] - delta[a] -
+						(physical ? offset[a] : 0.0));
 				}
 			}
 		}
