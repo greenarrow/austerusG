@@ -17,6 +17,7 @@ void usage(void) {
 	" -h, --help             Print this help message\n"
 	" -d, --deposition       Bounds of deposited material\n"
 	" -p, --physical         Track physical location not axis values\n"
+	" -v, --verbose          Explain what is being done\n"
 	"\n");
 }
 
@@ -25,7 +26,6 @@ int main(int argc, char *argv[])
 {
 	FILE *stream_input;
 
-	int verbose = 0;
 	int a = 0;
 
 	char axes[5];
@@ -35,16 +35,19 @@ int main(int argc, char *argv[])
 	bool deposition = false;
 	bool physical = false;
 
+	bool verbose = false;
+
 	// Read command line options
 	int option_index = 0, opt=0;
 	static struct option loptions[] = {
 		{"help", no_argument, 0, 'h'},
 		{"deposition", no_argument, 0, 'd'},
-		{"physical", no_argument, 0, 'p'}
+		{"physical", no_argument, 0, 'p'},
+		{"verbose", no_argument, 0, 'v'}
 	};
 
 	while(opt >= 0) {
-		opt = getopt_long(argc, argv, "hdp", loptions, &option_index);
+		opt = getopt_long(argc, argv, "hdpv", loptions, &option_index);
 
 		switch (opt) {
 			case 'h':
@@ -55,6 +58,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'p':
 				physical = true;
+				break;
+			case 'v':
+				verbose = true;
 				break;
 		}
 	}
