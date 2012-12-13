@@ -233,7 +233,24 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 		if (bytes == 0)
 			continue;
 
+		/*
+		 * We must process E before other axes so that we have delta[E]
+		 * available to decide whether deposition is happening or not.
+		 */
+		if (axis_position(axes, 'E') != -1) {
+			read_axis_delta(line, 'E', &mode, &delta[ie],
+				&position[ie], &offset[ie]);
+
+			bounds[ie].min = fminf(bounds[ie].min,
+				position[ie] - (physical ? offset[ie]: 0.0));
+			bounds[ie].max = fmaxf(bounds[ie].max,
+				position[ie] - (physical ? offset[ie] : 0.0));
+		}
+
 		for (a=0; a<strlen(axes); a++) {
+			if (axes[a] == 'E')
+				continue;
+
 			if (read_axis_delta(line, axes[a], &mode, &delta[a],
 				&position[a], &offset[a]) != 1)
 				continue;
@@ -279,6 +296,14 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 					fprintf(stderr, "DEPOSITION STARTED\n");
 
 				for (a=0; a<strlen(axes); a++) {
+					bounds[a].min = fminf(bounds[a].min,
+						position[a] -
+						(physical ? offset[a] : 0.0));
+
+					bounds[a].max = fmaxf(bounds[a].max,
+						position[a] -
+						(physical ? offset[a] : 0.0));
+
 					bounds[a].min = fminf(bounds[a].min,
 						position[a] - delta[a] -
 						(physical ? offset[a] : 0.0));
