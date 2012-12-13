@@ -61,6 +61,9 @@ for TEST in $@; do
     if [[ `basename $TEST` =~ ^deposition.* ]]; then
         OPTS="-d"
     fi
+    if [[ `basename $TEST` =~ ^physical.* ]]; then
+        OPTS="-p"
+    fi
 
     austerus-verge $OPTS $TEST/gcode &> $TEST_OUTPUT
     RESULT=$?
