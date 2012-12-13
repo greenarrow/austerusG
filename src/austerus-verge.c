@@ -77,7 +77,8 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	
-	lines = get_extends(bounds, axes, deposition, physical, stream_input);
+	lines = get_extends(bounds, axes, deposition, physical, verbose,
+		stream_input);
 
 	if (lines == 0) {
 		fprintf(stderr, "read no lines\n");

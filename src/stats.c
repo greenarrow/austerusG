@@ -190,7 +190,7 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
  * the print bed.
  */
 size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
-	bool physical, FILE *stream)
+	bool physical, bool verbose, FILE *stream)
 {
 	char *line = NULL;
 	size_t lines = 0;
@@ -227,6 +227,9 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 
 	while((bytes = getline(&line, &len, stream) != -1))
 	{
+		if (verbose)
+			fprintf(stderr, "LINE: \"%s\"\n", line);
+
 		if (bytes == 0)
 			continue;
 
@@ -240,6 +243,12 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			 */
 			if (deposition && (!started || delta[ie] == 0.0))
 				continue;
+
+			if (verbose)
+				fprintf(stderr, "CONSIDER[%c]: position %f, "
+					"offset %f\n",
+					axes[a], position[a],
+					(physical ? offset[a] : 0.0));
 
 			bounds[a].min = fminf(bounds[a].min,
 				position[a] - (physical ? offset[a]: 0.0));

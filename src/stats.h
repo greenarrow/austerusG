@@ -20,5 +20,5 @@ int read_axis_delta(const char *line, const char axis, int *mode, float *delta,
 	float *position, float *offset);
 float get_progress_table(unsigned int **table, size_t *lines, FILE *stream);
 size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
-	bool physical, FILE *stream);
+	bool physical, bool verbose, FILE *stream);
 
