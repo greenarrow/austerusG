@@ -4,7 +4,8 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 CC ?= gcc -Wall -pedantic -Wno-long-long -Wno-deprecated -ansi
 
-all: objdir austerus-panel austerus-send austerus-verge austerus-core
+all: objdir austerus-panel austerus-send austerus-verge austerus-shift \
+	austerus-core
 
 objdir:
 	mkdir -p build
@@ -20,6 +21,9 @@ austerus-send: nbgetline.o popen2.o stats.o serial.o austerus-send.o
 austerus-verge: stats.o austerus-verge.o
 	$(CC) -o austerus-verge build/stats.o build/austerus-verge.o -lm
 
+austerus-shift: austerus-shift.o
+	$(CC) -o austerus-shift build/austerus-shift.o
+
 austerus-core: serial.o austerus-core.o
 	$(CC) -o austerus-core build/serial.o build/austerus-core.o
 
@@ -31,6 +35,9 @@ austerus-send.o: src/austerus-send.c
 
 austerus-verge.o: src/austerus-verge.c
 	$(CC) -c -o build/austerus-verge.o src/austerus-verge.c
+
+austerus-shift.o: src/austerus-shift.c
+	$(CC) -c -o build/austerus-shift.o src/austerus-shift.c
 
 austerus-core.o: src/austerus-core.c
 	$(CC) -c -o build/austerus-core.o src/austerus-core.c
@@ -57,5 +64,6 @@ install:
 	$(INSTALL) -m 0644 docs/austerus-verge.1 $(DESTDIR)$(MANDIR)/man1
 
 clean:
-	rm austerus-panel austerus-send austerus-core austerus-verge build/*
+	rm austerus-panel austerus-send austerus-core austerus-verge \
+		austerus-shift build/*
 
