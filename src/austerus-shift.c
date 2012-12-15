@@ -58,6 +58,9 @@ int main(int argc, char *argv[]) {
 						/* G92 Set */
 						// shift
 						break;
+					default:
+						// want this? 
+						fputs(line, stdout);
 				}
 				break;
 
