@@ -1,0 +1,55 @@
+.TH "AUSTERUS-VERGE" "1"
+
+.SH NAME
+austerus-verge \- Measure axis limits of gcode.
+
+.SH SYNOPSIS
+\fBausterus-verge [\fIOPTION\fR]... \fI[FILE]\fR
+
+.SH DESCRIPTION
+.PP
+\fBausterus-verge\fR is a gcode analyser that outputs the extends of axis
+positions in a gcode \fIFILE\fR.
+
+In the \fIdefault\fR mode the output extends values will represent the absolute
+limits of the values that were assigned to the respective axes throughout the
+gcode file.
+
+The other available modes are \fIdeposition\fR and \fIphysical\fR and can be
+used individually or at the same time.
+
+Default mode tracks the following axes: XYZ
+
+.SH "OPTIONS"
+
+.TP
+\fB-v | --verbose\fR
+Explain what is being done.
+
+.TP
+\fB-d | --deposition\fR
+Measure bounds of \fIdeposited\fR material.
+
+In deposition mode the output extends values will represent the absolute
+extends of material deposited on the print bed.
+
+Deposition mode tracks the following axes: XYZE
+
+.TP
+\fB-p | --physical\fR
+Measure bounds of \fIphysical\fR machine position.
+
+The G92 (set) gcode command can be used to create an offset between the axes
+values and the physical positions of the axes.
+
+In physical mode option the output extends values will represent the physical
+positions of the machine, not the axis positions defined by the gcode file.
+
+.SH "OUTPUT"
+One row is output per axis in the following format:
+
+<\fIaxis\fR><\fItab\fR><\fImin\fR><\fItab\fR><\fImax\fR>
+
+.SH "AUTHOR"
+Written by Stefan Blanke
+
