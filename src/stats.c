@@ -264,7 +264,7 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			 * In deposition mode only record extends while
 			 * depositing
 			 */
-			if (deposition && (!started || delta[ie] == 0.0))
+			if (deposition && (!started || delta[ie] <= 0.0))
 				continue;
 
 			if (verbose)
