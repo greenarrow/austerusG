@@ -15,8 +15,9 @@ In the \fIdefault\fR mode the output extends values will represent the absolute
 limits of the values that were assigned to the respective axes throughout the
 gcode file.
 
-The other available modes are \fIdeposition\fR and \fIphysical\fR and can be
-used individually or at the same time.
+The other available modes are \fIdeposition\fR, \fIzmin\fR and \fIphysical\fR.
+The \fIphysical\fR mode can be used at any time but \fIdeposition\fR and
+\fIzmin\fR are exclusive.
 
 Default mode tracks the following axes: XYZ
 
@@ -34,6 +35,10 @@ In deposition mode the output extends values will represent the absolute
 extends of material deposited on the print bed.
 
 Deposition mode tracks the following axes: XYZE
+
+.TP
+\fB-z | --zmin\fR \fIzmin\fR
+Measure bounds of the region for which the Z axis is less than \fIzmin\fR.
 
 .TP
 \fB-p | --physical\fR

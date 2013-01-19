@@ -190,7 +190,7 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
  * the print bed.
  */
 size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
-	bool physical, bool verbose, FILE *stream)
+	bool physical, bool zmode, float zmin, bool verbose, FILE *stream)
 {
 	char *line = NULL;
 	size_t lines = 0;
@@ -265,6 +265,13 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			 * depositing
 			 */
 			if (deposition && (!started || delta[ie] <= 0.0))
+				continue;
+
+			/*
+			 * In zmode only record extends while Z axis is within
+			 * unsafe area.
+			 */
+			if (zmode && (position[iz] < zmin))
 				continue;
 
 			if (verbose)

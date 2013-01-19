@@ -17,6 +17,7 @@ void usage(void) {
 	" -h, --help             Print this help message\n"
 	" -d, --deposition       Bounds of deposited material\n"
 	" -p, --physical         Track physical location not axis values\n"
+	" -z, --zmin=zmin        Track bounds travelled while Z less than\n"
 	" -v, --verbose          Explain what is being done\n"
 	"\n");
 }
@@ -34,6 +35,8 @@ int main(int argc, char *argv[])
 
 	bool deposition = false;
 	bool physical = false;
+	bool zmode = false;
+	float zmin = 0.0;
 
 	bool verbose = false;
 
@@ -43,11 +46,12 @@ int main(int argc, char *argv[])
 		{"help", no_argument, 0, 'h'},
 		{"deposition", no_argument, 0, 'd'},
 		{"physical", no_argument, 0, 'p'},
+		{"zmin", required_argument, 0, 'z'},
 		{"verbose", no_argument, 0, 'v'}
 	};
 
 	while(opt >= 0) {
-		opt = getopt_long(argc, argv, "hdpv", loptions, &option_index);
+		opt = getopt_long(argc, argv, "hdpz:v", loptions, &option_index);
 
 		switch (opt) {
 			case 'h':
@@ -59,10 +63,20 @@ int main(int argc, char *argv[])
 			case 'p':
 				physical = true;
 				break;
+			case 'z':
+				zmode = true;
+				zmin = (float)atof(optarg);
+				break;
 			case 'v':
 				verbose = true;
 				break;
 		}
+	}
+
+	if (deposition && zmode) {
+		fprintf(stderr, "deposition and zmin modes cannot be used "
+			"together\n");
+		return EXIT_FAILURE;
 	}
 
 	if (deposition)
@@ -77,8 +91,8 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	
-	lines = get_extends(bounds, axes, deposition, physical, verbose,
-		stream_input);
+	lines = get_extends(bounds, axes, deposition, physical, zmode, zmin,
+		verbose, stream_input);
 
 	if (lines == 0) {
 		fprintf(stderr, "read no lines\n");
