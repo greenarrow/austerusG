@@ -217,9 +217,7 @@ void print_file(FILE *stream_input, size_t lines, const char *cmd,
 	if (tally != lines) {
 		fprintf(stderr, "Expected %lu valid lines, got more %lu\n",
 			(long unsigned int) lines, (long unsigned int) tally);
-		abort();
 	}
-
 
 	if (status != 0)
 		printf("bad exit from core: %d\n", status);
