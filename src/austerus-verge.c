@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
 	struct limit bounds[4];
 	size_t lines = 0;
 
+	/*getenv("MQ_PRINTHEAD")*/
+
 	bool deposition = false;
 	bool physical = false;
 	bool zmode = false;

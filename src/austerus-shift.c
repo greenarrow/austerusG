@@ -72,6 +72,13 @@ int main(int argc, char *argv[]) {
 	char prefix = 0;
 	unsigned int code = 0;
 
+	float ignore = 0.0;
+
+	/* tmp */
+	float zmin = 6.1;
+	float sx = 60.0;
+	float sy = 0.0;
+
 	while((bytes = getline(&line, &len, stream) != -1)) {
 
 		buffer = fmemopen(line, strlen(line), "r");
@@ -95,7 +102,15 @@ int main(int argc, char *argv[]) {
 						break;
 					case 28:
 						/* G28 Home */
-						
+						fputs(line, stdout);
+						/* we should really check home at where? */
+						if (read_axis(line, 'Z', &ignore)) {
+							printf("G1 Z%f\n", zmin);
+						}
+						if (read_axis(line, 'X', &ignore)) {
+							printf("G1 X%f Y%f\n", sx, sy);
+							printf("G92 X0.0 Y0.0\n");
+						}
 						break;
 					case 90:
 						/* G90 Absolute Positioning */
@@ -110,6 +125,8 @@ int main(int argc, char *argv[]) {
 					case 92:
 						/* G92 Set */
 						// shift
+						// want this? 
+						fputs(line, stdout);
 						break;
 					default:
 						// want this? 

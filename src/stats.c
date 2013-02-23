@@ -270,9 +270,14 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			/*
 			 * In zmode only record extends while Z axis is within
 			 * unsafe area.
+			 * Everywhere it goes below safe Z limit?
 			 */
-			if (zmode && (position[iz] < zmin))
+			if (zmode && (position[iz] < zmin)) {
+				/* ignore the safe z reset area */
+				/*if (position[ix] > 20.0 || position[iy] > 20.0)
+				*/
 				continue;
+			}
 
 			if (verbose)
 				fprintf(stderr, "CONSIDER[%c]: position %f, "
