@@ -49,11 +49,11 @@ nbgetline.o: src/nbgetline.c
 
 install:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
-	$(INSTALL) -d $(DESTDIR)$(MANDIR)
+	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL) -m 0755 austerus-core $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0755 austerus-send $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0755 austerus-panel $(DESTDIR)$(BINDIR)
-	$(INSTALL) -m 0644 docs/austerus-core.1 $(DESTDIR)$(MANDIR)
+	$(INSTALL) -m 0644 docs/austerus-core.1 $(DESTDIR)$(MANDIR)/man1
 
 clean:
 	rm austerus-panel austerus-send austerus-core austerus-verge build/*
