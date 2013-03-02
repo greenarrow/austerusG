@@ -62,6 +62,7 @@ install:
 	$(INSTALL) -m $(COREMODE) austerus-core $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0755 austerus-send $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0755 austerus-panel $(DESTDIR)$(BINDIR)
+	$(INSTALL) -m 0755 austerus-verge $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0644 docs/austerus-core.1 $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL) -m 0644 docs/austerus-verge.1 $(DESTDIR)$(MANDIR)/man1
 
