@@ -4,6 +4,15 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 CC ?= gcc -Wall -pedantic -Wno-long-long -Wno-deprecated -ansi
 
+SETUID ?= 0
+
+ifeq ($(SETUID),1)
+COREFLAGS = -D SETUID
+COREMODE = 6755
+else
+COREMODE = 0755
+endif
+
 all: objdir austerus-panel austerus-send austerus-verge austerus-core
 
 objdir:
@@ -33,7 +42,7 @@ austerus-verge.o: src/austerus-verge.c
 	$(CC) -c -o build/austerus-verge.o src/austerus-verge.c
 
 austerus-core.o: src/austerus-core.c
-	$(CC) -c -o build/austerus-core.o src/austerus-core.c
+	$(CC) $(COREFLAGS) -c -o build/austerus-core.o src/austerus-core.c
 
 serial.o: src/serial.c
 	$(CC) -c -o build/serial.o src/serial.c
@@ -50,7 +59,7 @@ nbgetline.o: src/nbgetline.c
 install:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
 	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1
-	$(INSTALL) -m 0755 austerus-core $(DESTDIR)$(BINDIR)
+	$(INSTALL) -m $(COREMODE) austerus-core $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0755 austerus-send $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0755 austerus-panel $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 0644 docs/austerus-core.1 $(DESTDIR)$(MANDIR)/man1

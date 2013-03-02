@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 
 #include "serial.h"
 #include "protocol.h"
@@ -37,6 +38,33 @@ int main(int argc, char* argv[]) {
 	int baudrate		= DEFAULT_BAUDRATE;
 	int serial_timeout	= DEFAULT_TIMEOUT;
 	unsigned int ack_count	= DEFAULT_ACKCOUNT;
+
+#ifdef SETUID
+	uid_t ruid = getuid();
+	uid_t euid = geteuid();
+
+	if (setuid(0) == -1) {
+		perror("Error: setuid");
+		leave(EXIT_FAILURE);
+	}
+
+	euid = geteuid();
+
+	if (euid != 0) {
+		perror("Error: setuid");
+		leave(EXIT_FAILURE);
+	}
+
+	if (nice(-10) == -1) {
+		perror("Error: setuid");
+		leave(EXIT_FAILURE);
+	}
+
+	if (ruid != euid && setuid(ruid) == -1) {
+		perror("Error: setuid");
+		leave(EXIT_FAILURE);
+	}
+#endif
 
 	// Bind to SIGINT for cleanup
 	signal(SIGINT, leave);

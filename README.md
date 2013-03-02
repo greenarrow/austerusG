@@ -53,6 +53,13 @@ The code paths between blocking points and transmission of the next line are
 very short so it would be unusual for the line queue on the firmware to not
 be full.
 
+On POSIX systems you can build austerus-core as a setuid binary that will raise
+the priority of its own process. This can be a good idea if running on low
+power hardware that has other processes running.
+
+    $ make SETUID=1
+    # make SETUID=1 install
+
 ### austerus-send
 
 Simple program for printing gcode files while displaying progress.
