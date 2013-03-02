@@ -55,7 +55,7 @@ ssize_t filter_comments(char *line) {
 
 
 // Print gcode from stream_input to austerus-core on stream_gcode
-void print_file(FILE *stream_input, size_t lines, const char *cmd,
+int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	unsigned int filament, unsigned int *table, int mode, int verbose) {
 
 	int pipe_gcode = 0;
@@ -148,7 +148,7 @@ void print_file(FILE *stream_input, size_t lines, const char *cmd,
 		if (tally > lines) {
 			fprintf(stderr, "Expected %lu valid lines, got more\n",
 				(long unsigned int) lines);
-			return;
+			return 1;
 		}
 
 		if (filament == 0)
@@ -183,7 +183,11 @@ void print_file(FILE *stream_input, size_t lines, const char *cmd,
 		perror("error closing stream");
 
 	close(pipe_gcode);
-	wait(&status);
+
+	if (wait(&status) != pid)
+		perror("error waiting for core");
+
+	status = WEXITSTATUS(status);
 
 	/*
 	 * Read any remaining data from the feedback pipe until the core has
@@ -219,9 +223,6 @@ void print_file(FILE *stream_input, size_t lines, const char *cmd,
 			(long unsigned int) lines, (long unsigned int) tally);
 	}
 
-	if (status != 0)
-		printf("bad exit from core: %d\n", status);
-
 	if (pclose(stream_feedback) != 0)
 		perror("error closing stream");
 
@@ -229,6 +230,8 @@ void print_file(FILE *stream_input, size_t lines, const char *cmd,
 		free(line);
 
 	close(pipe_feedback);
+
+	return status;
 }
 
 
@@ -254,6 +257,8 @@ int main(int argc, char *argv[])
 	char *serial_port = NULL;
 	int mode = NORMAL;
 	int verbose = 0;
+	int status = 0;
+	int rc = 0;
 
 	char *cmd = NULL;	// Command string to execute austerus-core
 
@@ -333,8 +338,15 @@ int main(int argc, char *argv[])
 		printf("total filament length: %fmm\n", filament);
 
 		rewind(stream_input);
-		print_file(stream_input, lines, cmd, (unsigned int) filament, table,
-			mode, verbose);
+		rc = print_file(stream_input, lines, cmd,
+			(unsigned int) filament, table, mode, verbose);
+
+		if (rc != 0) {
+			if (rc > status)
+				status = rc;
+
+			printf("bad exit from core: %d\n", rc);
+		}
 
 		fclose(stream_input);
 
@@ -344,9 +356,6 @@ int main(int argc, char *argv[])
 	}
 
 	free(cmd);
-	return EXIT_SUCCESS;
+	return status;
 }
-
-
-
 

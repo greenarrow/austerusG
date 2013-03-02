@@ -7,6 +7,6 @@
 void print_time(int seconds);
 void print_status(int pct, int taken, int estimate);
 ssize_t filter_comments(char *line);
-void print_file(FILE *stream_input, size_t lines, const char *cmd,
+int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	unsigned int filament, unsigned int *table, int mode, int verbose);
 int main();
