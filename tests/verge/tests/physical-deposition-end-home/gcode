@@ -1,0 +1,33 @@
+M92 E865.888000
+M109 S245.000000
+G21        ;metric values
+G90        ;absolute positioning
+G28 X0 Y0  ;move X/Y to min endstops
+G28 Z0     ;move Z to min endstops
+G92 X0 Y0 Z0 E0         ;reset software position to front/left/z=0.0
+G1 Z15.0 F180.0
+G92 E0                  ;zero the extruded length
+G1 F200 E5
+G1 E3.5
+G92 E0                  ;zero the extruded length again
+G1 X100.0 Y100.0 F9000.0
+G1 Z0.0 F180.0
+G1 X55.129 Y100.8 Z0.36 F9000.0
+G1 X55.351 Y102.493 F750.0 E0.0833
+G1 X56.809 Y111.902 E0.5478
+G1 X58.417 Y116.39 E0.7803
+G1 X65.603 Y128.197 E1.4546
+G1 X69.552 Y132.145 E1.727
+G1 X75.993 Y136.976 E2.1197
+G1 X82.304 Y140.093 E2.4631
+G1 X87.12 Y141.693 E2.7107
+G1 X90.4 Y142.52 E2.8757
+G1 X109.6 Y142.52 E3.8123
+G1 X116.098 Y140.893 E4.1391
+G1 X124.009 Y136.974 E4.5698
+G1 X130.449 Y132.145 E4.9624
+G1 X134.397 Y128.197 E5.2348
+G1 X141.583 Y116.39 E5.9091
+G91                        ;relative positioning
+G1 Z10.0 F180.0 E-5
+G28 X0 Y0                  ;move X/Y to min endstops, so the head is out of the way
