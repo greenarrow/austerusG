@@ -57,15 +57,9 @@ rm $LOG
 for TEST in $@; do
     status "== TEST $TEST START =="
 
-    OPTS=""
-    if [[ `basename $TEST` =~ ^deposition.* ]]; then
-        OPTS="-d"
-    fi
-    if [[ `basename $TEST` =~ ^physical.* ]]; then
-        OPTS="-p"
-    fi
+    OPTS=`cat "$TEST/flags"`
 
-    austerus-verge $OPTS $TEST/gcode &> $TEST_OUTPUT
+    austerus-verge $OPTS "$TEST/gcode" &> $TEST_OUTPUT
     RESULT=$?
     RETURN+=$RESULT
 
