@@ -59,6 +59,10 @@ for TEST in $@; do
 
     OPTS=`cat "$TEST/flags"`
 
+    if $VERBOSE; then
+        echo austerus-verge $OPTS "$TEST/gcode"
+    fi
+
     austerus-verge $OPTS "$TEST/gcode" &> $TEST_OUTPUT
     RESULT=$?
     RETURN+=$RESULT
