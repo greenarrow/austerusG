@@ -1,0 +1,15 @@
+G21        ;metric values
+G90        ;absolute positioning
+G28 X0 Y0  ;move X/Y to min endstops
+G28 Z0     ;move Z to min endstops
+G92 X0 Y0 Z0 E0         ;reset software position to front/left/z=0.0
+G1 Z20
+G1 X100 Y100
+G1 Z5
+G1 X200 Y200
+G1 Z20
+G1 X300 Y300 Z30
+G1 X400 Y400 Z20
+G1 X150 Y210
+G1 Z5
+G1 Z20
