@@ -297,7 +297,7 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			 * In zmode only record extends while Z axis is within
 			 * unsafe area.
 			 */
-			if (zmode && (position[iz] < zmin))
+			if (zmode && (position[iz] > zmin))
 				continue;
 
 			if (verbose)
