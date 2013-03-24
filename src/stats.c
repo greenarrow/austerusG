@@ -216,7 +216,8 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
  * the print bed.
  */
 size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
-	bool physical, bool zmode, float zmin, bool verbose, FILE *stream)
+	bool physical, bool zmode, float zmin, struct region *ignore,
+	bool verbose, FILE *stream)
 {
 	char *line = NULL;
 	size_t lines = 0;
@@ -299,6 +300,52 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			 */
 			if (zmode && (position[iz] > zmin))
 				continue;
+
+			/* physical? */
+			/* hard to do this one axis at a time!*/
+			if (ignore != NULL) {
+				if (position[ix] >= ignore->x1
+					&& position[ix] <= ignore->x2
+					&& position[iy] >= ignore->y1
+					&& position[iy] <= ignore->y2)
+					continue;
+				/*
+				{
+				printf("(%f <= %f && %f => %f) && (%f <= %f && %f >= %f)\n",
+					position[ix], ignore->x1,
+						position[ix], ignore->x2,
+					position[iy], ignore->y1,
+						position[iy], ignore->y2);
+					continue;
+				}
+				*/
+/*
+				if ((position[ix] < ignore->x1
+						&& position[ix] > ignore->x2)
+					|| (position[iy] < ignore->y1
+						&& position[iy] > ignore->y2))
+				{
+				printf("(%f < %f && %f > %f) || (%f < %f && %f > %f)\n",
+					position[ix], ignore->x1,
+						position[ix], ignore->x2,
+					position[iy], ignore->y1,
+						position[iy], ignore->y2);
+				continue;
+				}
+				if ((position[ix] < ignore->x1
+						&& position[ix] < ignore->x1)
+					|| (position[iy] < ignore->y1
+						&& position[iy] > ignore->y2))
+				{
+				printf("(%f < %f && %f > %f) || (%f < %f && %f > %f)\n",
+					position[ix], ignore->x1,
+						position[ix], ignore->x2,
+					position[iy], ignore->y1,
+						position[iy], ignore->y2);
+				continue;
+				}
+*/
+			}
 
 			if (verbose)
 				fprintf(stderr, "CONSIDER[%c]: position %f, "

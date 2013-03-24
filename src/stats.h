@@ -11,6 +11,13 @@ struct limit {
 	float max;
 };
 
+struct region {
+	float x1;
+	float x2;
+	float y1;
+	float y2;
+};
+
 
 int axis_position(const char *axes, char axis);
 bool check_axis(const char *line, char target);
@@ -22,5 +29,6 @@ int read_axis_delta(const char *line, const char axis, int *mode, float *delta,
 	float *position, float *offset);
 float get_progress_table(unsigned int **table, size_t *lines, FILE *stream);
 size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
-	bool physical, bool zmode, float zmin, bool verbose, FILE *stream);
+	bool physical, bool zmode, float zmin, struct region *ignore,
+	bool verbose, FILE *stream);
 

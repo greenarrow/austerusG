@@ -9,6 +9,18 @@
 #include "austerus-verge.h"
 
 
+float read_part(const char *arg) {
+	char *part = strtok(arg, ":");
+
+	if (part == NULL) {
+		fprintf(stderr, "invalid ignore string\n");
+		abort();
+	}
+
+	return strtof(part, NULL);
+}
+
+
 // Print usage to terminal
 void usage(void) {
 	printf("Usage: austerus-verge [OPTION]... [FILE]\n"
@@ -37,6 +49,8 @@ int main(int argc, char *argv[])
 	bool physical = false;
 	bool zmode = false;
 	float zmin = 0.0;
+	struct region head;
+	struct region *ignore = NULL;
 
 	bool verbose = false;
 
@@ -47,11 +61,12 @@ int main(int argc, char *argv[])
 		{"deposition", no_argument, 0, 'd'},
 		{"physical", no_argument, 0, 'p'},
 		{"zmin", required_argument, 0, 'z'},
+		{"ignore", required_argument, 0, 'i'},
 		{"verbose", no_argument, 0, 'v'}
 	};
 
 	while(opt >= 0) {
-		opt = getopt_long(argc, argv, "hdpz:v", loptions, &option_index);
+		opt = getopt_long(argc, argv, "hdpz:i:v", loptions, &option_index);
 
 		switch (opt) {
 			case 'h':
@@ -66,6 +81,14 @@ int main(int argc, char *argv[])
 			case 'z':
 				zmode = true;
 				zmin = (float)atof(optarg);
+				break;
+			case 'i':
+				head.x1 = read_part(optarg);
+				head.x2 = read_part(NULL);
+				head.y1 = read_part(NULL);
+				head.y2 = read_part(NULL);
+
+				ignore = &head;
 				break;
 			case 'v':
 				verbose = true;
@@ -92,7 +115,7 @@ int main(int argc, char *argv[])
 	}
 	
 	lines = get_extends(bounds, axes, deposition, physical, zmode, zmin,
-		verbose, stream_input);
+		ignore, verbose, stream_input);
 
 	if (lines == 0) {
 		fprintf(stderr, "read no lines\n");
