@@ -231,6 +231,11 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 	int iz = axis_position(axes, 'Z');
 	int ie = axis_position(axes, 'E');
 
+	if (deposition && zmode) {
+		fprintf(stderr, "deposition and zmode cannot be used\n");
+		abort();
+	}
+
 	if (deposition && ie == -1) {
 		fprintf(stderr, "axes XY are required in deposition mode\n");
 		abort();
@@ -252,148 +257,90 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 		bounds[a].max = FLT_MIN;
 	}
 
-	while((bytes = getline(&line, &len, stream) != -1))
-	{
+	while((bytes = getline(&line, &len, stream) != -1)) {
 		if (verbose)
 			fprintf(stderr, "LINE: \"%s\"\n", line);
 
 		if (bytes == 0)
 			continue;
 
-		/*
-		 * We must process E before other axes so that we have delta[E]
-		 * available to decide whether deposition is happening or not.
-		 */
-		if (axis_position(axes, 'E') != -1) {
-			read_axis_delta(line, 'E', &mode, &delta[ie],
-				&position[ie], &offset[ie]);
-
-			bounds[ie].min = fminf(bounds[ie].min,
-				position[ie] - (physical ? offset[ie]: 0.0));
-			bounds[ie].max = fmaxf(bounds[ie].max,
-				position[ie] - (physical ? offset[ie] : 0.0));
-		}
-
 		for (a=0; a<strlen(axes); a++) {
-			if (axes[a] == 'E')
-				continue;
-
-			if (read_axis_delta(line, axes[a], &mode, &delta[a],
-				&position[a], &offset[a]) != 1)
-				continue;
-
-			if (verbose)
-				fprintf(stderr, "STATE: deposition %d, "
-					"started %d, delta[E] %f\n",
-					deposition, started, delta[ie]);
-
-			/*
-			 * In deposition mode only record extends while
-			 * depositing
-			 */
-			if (deposition && (!started || delta[ie] <= 0.0))
-				continue;
-
-			/*
-			 * In zmode only record extends while Z axis is within
-			 * unsafe area.
-			 */
-			if (zmode && (position[iz] > zmin))
-				continue;
-
-			/* physical? */
-			/* hard to do this one axis at a time!*/
-			if (ignore != NULL) {
-				if (position[ix] >= ignore->x1
-					&& position[ix] <= ignore->x2
-					&& position[iy] >= ignore->y1
-					&& position[iy] <= ignore->y2)
-					continue;
-				/*
-				{
-				printf("(%f <= %f && %f => %f) && (%f <= %f && %f >= %f)\n",
-					position[ix], ignore->x1,
-						position[ix], ignore->x2,
-					position[iy], ignore->y1,
-						position[iy], ignore->y2);
-					continue;
-				}
-				*/
-/*
-				if ((position[ix] < ignore->x1
-						&& position[ix] > ignore->x2)
-					|| (position[iy] < ignore->y1
-						&& position[iy] > ignore->y2))
-				{
-				printf("(%f < %f && %f > %f) || (%f < %f && %f > %f)\n",
-					position[ix], ignore->x1,
-						position[ix], ignore->x2,
-					position[iy], ignore->y1,
-						position[iy], ignore->y2);
-				continue;
-				}
-				if ((position[ix] < ignore->x1
-						&& position[ix] < ignore->x1)
-					|| (position[iy] < ignore->y1
-						&& position[iy] > ignore->y2))
-				{
-				printf("(%f < %f && %f > %f) || (%f < %f && %f > %f)\n",
-					position[ix], ignore->x1,
-						position[ix], ignore->x2,
-					position[iy], ignore->y1,
-						position[iy], ignore->y2);
-				continue;
-				}
-*/
-			}
-
-			if (verbose)
-				fprintf(stderr, "CONSIDER[%c]: position %f, "
-					"offset %f\n",
-					axes[a], position[a],
-					(physical ? offset[a] : 0.0));
-
-			bounds[a].min = fminf(bounds[a].min,
-				position[a] - (physical ? offset[a]: 0.0));
-			bounds[a].max = fmaxf(bounds[a].max,
-				position[a] - (physical ? offset[a] : 0.0));
+			read_axis_delta(line, axes[a], &mode, &delta[a],
+						&position[a], &offset[a]);
 		}
 
-		if (deposition && !started) {
-			if (verbose)
-				fprintf(stderr, "START CONSIDER: delta[E] %f, "
-					"delta[X] %f, delta[Y] %f\n", delta[ie],
-					delta[ix], delta[iy]);
+		/* Always update E bounds. */
+		bounds[ie].min = fminf(bounds[ie].min,
+			position[ie] - (physical ? offset[ie]: 0.0));
+		bounds[ie].max = fmaxf(bounds[ie].max,
+			position[ie] - (physical ? offset[ie] : 0.0));
 
-			/*
-			 * When print head is moved while extruding for first
-			 * time consider to have started printing.
-			 */
+		if (verbose) {
+			fprintf(stderr, "STATE: deposition %d, "
+				"started %d, delta[E] %f\n",
+				deposition, started, delta[ie]);
+
+			fprintf(stderr, "START CONSIDER: delta[E] %f, "
+				"delta[X] %f, delta[Y] %f\n", delta[ie],
+				delta[ix], delta[iy]);
+		}
+
+		/* See if new point is inside ignore region. */
+		if (ignore != NULL) {
+			if (position[ix] >= ignore->x1
+				&& position[ix] <= ignore->x2
+				&& position[iy] >= ignore->y1
+				&& position[iy] <= ignore->y2) {
+
+				if (verbose)
+					fprintf(stderr, "ignore region\n");
+
+				continue;
+			}
+		}
+
+		/*
+		 * When print head is moved while extruding for first
+		 * time consider to have started printing.
+		 */
+		if (deposition && !started) {
 			if (delta[ie] > 0.0 && delta[ix] + delta[iy] > 0.0) {
 				started = true;
 
 				if (verbose)
 					fprintf(stderr, "DEPOSITION STARTED\n");
-
-				for (a=0; a<strlen(axes); a++) {
-					bounds[a].min = fminf(bounds[a].min,
-						position[a] -
-						(physical ? offset[a] : 0.0));
-
-					bounds[a].max = fmaxf(bounds[a].max,
-						position[a] -
-						(physical ? offset[a] : 0.0));
-
-					bounds[a].min = fminf(bounds[a].min,
-						position[a] - delta[a] -
-						(physical ? offset[a] : 0.0));
-
-					bounds[a].max = fmaxf(bounds[a].max,
-						position[a] - delta[a] -
-						(physical ? offset[a] : 0.0));
-				}
 			}
 		}
+
+		/*
+		 * In deposition mode only record extends while
+		 * depositing.
+		 */
+		if (deposition && (!started || delta[ie] <= 0.0))
+			continue;
+
+		/*
+		 * In zmode only record extends while Z axis is within
+		 * unsafe area.
+		 */
+		if (zmode && position[iz] > zmin && position[iz] - delta[iz] > zmin)
+			continue;
+
+		for (a=0; a<strlen(axes); a++) {
+			if (axes[a] == 'E')
+				continue;
+
+			bounds[a].min = fminf(bounds[a].min,
+				position[a] - (physical ? offset[a]: 0.0));
+			bounds[a].max = fmaxf(bounds[a].max,
+				position[a] - (physical ? offset[a] : 0.0));
+
+			bounds[a].min = fminf(bounds[a].min,
+				position[a] - delta[a] - (physical ? offset[a]: 0.0));
+			bounds[a].max = fmaxf(bounds[a].max,
+				position[a] - delta[a] - (physical ? offset[a] : 0.0));
+		}
+
 		lines++;
 	}
 
