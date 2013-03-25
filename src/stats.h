@@ -13,6 +13,8 @@ struct limit {
 
 
 int axis_position(const char *axes, char axis);
+bool check_axis(const char *line, char target);
+bool check_axes(const char *line, char *targets);
 bool read_axis(const char *line, char target, float *value);
 void read_move(const char *line, int mode, char axis, float *delta,
 	float *position);

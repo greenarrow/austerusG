@@ -23,7 +23,33 @@ int axis_position(const char *axes, char axis) {
 
 
 /*
- * Read a stream for the next occurrence of a value for the specified axis.
+ * Check to see if the target axis is specified in the line.
+ */
+bool check_axis(const char *line, char target)
+{
+	char *found = strchr(line, target);
+	return found != NULL;
+}
+
+
+/*
+ * Check to see if any of the target axes are specified in the line.
+ */
+bool check_axes(const char *line, char *targets)
+{
+	int i = 0;
+
+	for (i = 0; i < strlen(targets); i++) {
+		if (check_axis(line, targets[i]))
+			return true;
+	}
+
+	return false;
+}
+
+
+/*
+ * Read the value of the target axis from the line.
  */
 bool read_axis(const char *line, char target, float *value)
 {
