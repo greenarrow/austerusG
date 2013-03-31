@@ -249,6 +249,9 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 
 	bool started = false;
 
+	bool igthis = false;
+	bool iglast = false;
+
 	for (a=0; a<strlen(axes); a++) {
 		position[a] = 0.0;
 		delta[a] = 0.0;
@@ -285,6 +288,8 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 				delta[ix], delta[iy]);
 		}
 
+		igthis = false;
+
 		/* See if new point is inside ignore region. */
 		if (ignore != NULL) {
 			if ((position[ix] - (physical ? offset[ix] : 0.0)) >= ignore->x1
@@ -295,6 +300,8 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 				if (verbose)
 					fprintf(stderr, "ignore region\n");
 
+				igthis = true;
+				iglast = true;
 				continue;
 			}
 		}
@@ -335,12 +342,15 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 			bounds[a].max = fmaxf(bounds[a].max,
 				position[a] - (physical ? offset[a] : 0.0));
 
-			bounds[a].min = fminf(bounds[a].min,
-				position[a] - delta[a] - (physical ? offset[a]: 0.0));
-			bounds[a].max = fmaxf(bounds[a].max,
-				position[a] - delta[a] - (physical ? offset[a] : 0.0));
+			if (!iglast) {
+				bounds[a].min = fminf(bounds[a].min,
+					position[a] - delta[a] - (physical ? offset[a]: 0.0));
+				bounds[a].max = fmaxf(bounds[a].max,
+					position[a] - delta[a] - (physical ? offset[a] : 0.0));
+			}
 		}
 
+		iglast = igthis;
 		lines++;
 	}
 
