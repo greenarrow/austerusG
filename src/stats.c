@@ -287,10 +287,10 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 
 		/* See if new point is inside ignore region. */
 		if (ignore != NULL) {
-			if (position[ix] >= ignore->x1
-				&& position[ix] <= ignore->x2
-				&& position[iy] >= ignore->y1
-				&& position[iy] <= ignore->y2) {
+			if ((position[ix] - (physical ? offset[ix] : 0.0)) >= ignore->x1
+				&& (position[ix] - (physical ? offset[ix] : 0.0)) <= ignore->x2
+				&& (position[iy] - (physical ? offset[iy] : 0.0)) >= ignore->y1
+				&& (position[iy] - (physical ? offset[iy] : 0.0)) <= ignore->y2) {
 
 				if (verbose)
 					fprintf(stderr, "ignore region\n");
