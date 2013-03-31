@@ -348,6 +348,11 @@ size_t get_extends(struct limit *bounds, const char *axes, bool deposition,
 				bounds[a].max = fmaxf(bounds[a].max,
 					position[a] - delta[a] - (physical ? offset[a] : 0.0));
 			}
+
+			if (verbose)
+				fprintf(stderr, "bound[%c].min = %f, "
+						"max = %f\n", axes[a],
+						bounds[a].min, bounds[a].max);
 		}
 
 		iglast = igthis;
