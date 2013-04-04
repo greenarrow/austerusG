@@ -14,6 +14,8 @@ void usage(void) {
 	" -h               Print this help message\n"
 	" -x DELTA         Shift X axis by DELTA\n"
 	" -y DELTA         Shift Y axis by DELTA\n"
+	" -a X             Safe X start\n"
+	" -b Y             Safe Y start\n"
 	" -z SAFE          Safe to move anywhere at Z SAFE\n"
 	"\n");
 }
@@ -36,11 +38,13 @@ int main(int argc, char *argv[]) {
 	float dx = 0.0;
 	float dy = 0.0;
 	float zmin = 0.0;
+	float sx = 0.0;
+	float sy = 0.0;
 
 	bool init = true;
 	bool drifting = true;
 
-	while((opt = getopt(argc, argv, "hx:y:z:")) != -1) {
+	while((opt = getopt(argc, argv, "hx:y:z:a:b:")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage();
@@ -53,6 +57,12 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'z':
 			zmin = strtof(optarg, NULL);
+			break;
+		case 'a':
+			sx = strtof(optarg, NULL);
+			break;
+		case 'b':
+			sy = strtof(optarg, NULL);
 			break;
 		}
 	}
@@ -86,7 +96,7 @@ int main(int argc, char *argv[]) {
 				/* G28 Home */
 				if (check_axes(line, "XY")) {
 					printf("G91\n");
-					printf("G92 Z%f\n", zmin);
+					printf("G1 Z%f\n", zmin);
 					printf("G90\n");
 
 					printf("G28 X0 Y0\n");
@@ -98,17 +108,19 @@ int main(int argc, char *argv[]) {
 					}
 
 					if (dx < 0.0) {
-						printf("G92 X%f\n", -dx);
+						printf("G92 X%f\n", dx);
+						printf("G1 X%f\n", dx + sx);
 					} else if (dx > 0.0) {
-						printf("G1 X%f\n", dx);
-						printf("G92 X0.0");
+						printf("G1 X%f\n", sx);
+						printf("G92 X%f\n", sx - dx);
 					}
 
 					if (dy < 0.0) {
-						printf("G92 Y%f\n", -dy);
+						printf("G92 Y%f\n", dy);
+						printf("G1 Y%f\n", dy + sy);
 					} else if (dy > 0.0) {
-						printf("G1 Y%f\n", dy);
-						printf("G92 Y0.0");
+						printf("G1 Y%f\n", sy);
+						printf("G92 Y%f\n", sy - dy);
 					}
 
 					drifting = false;
