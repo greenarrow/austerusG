@@ -1,0 +1,32 @@
+M92 E865.888000
+M109 S230.000000
+;Sliced clip-v2.stl at: Sun 04 Nov 2012 12:45:43
+;Basic settings: Layer height: 0.2 Walls: 0.8 Fill: 80
+;Print time:     0:02
+;Filament used:     0.10m     0.82g
+;Filament cost:  Unknown
+G21        ;metric values
+G90        ;absolute positioning
+M107       ;start with the fan off
+G91
+G1 Z8.100000
+G90
+G28 X0 Y0
+G28 Z0
+G1 Z8.100000
+G1 X175.000000
+G92 X100.000000
+G1 Y135.000000
+G92 Y100.000000
+G1 Z15.0 F180
+G92 E0                  ;zero the extruded length
+G1 F200 E3
+G92 E0                  ;zero the extruded length again
+;G1 X100 Y100 F12000
+G1 F12000
+;LAYER:0
+;TYPE:SKIRT
+G1 X82.4 Y105.957 Z0.36 F12000.0
+G1 X84.642 Y110.435 F3000.0 E0.2443
+G1 X87.17 Y112.963 E0.4188
+G1 X95.157 Y116.92 E0.8536
