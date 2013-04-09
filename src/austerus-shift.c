@@ -109,15 +109,15 @@ int main(int argc, char *argv[]) {
 
 					if (dx < 0.0) {
 						printf("G92 X%f\n", dx);
-						printf("G1 X%f\n", dx + sx);
+						printf("G1 X%f\n", sx - dx);
 					} else if (dx > 0.0) {
 						printf("G1 X%f\n", sx);
 						printf("G92 X%f\n", sx - dx);
 					}
 
 					if (dy < 0.0) {
-						printf("G92 Y%f\n", dy);
-						printf("G1 Y%f\n", dy + sy);
+						printf("G92 Y%f\n", sy);
+						printf("G1 Y%f\n", sy - dy);
 					} else if (dy > 0.0) {
 						printf("G1 Y%f\n", sy);
 						printf("G92 Y%f\n", sy - dy);
