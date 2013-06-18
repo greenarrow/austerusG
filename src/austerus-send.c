@@ -148,7 +148,7 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 		if (tally > lines) {
 			fprintf(stderr, "Expected %lu valid lines, got more\n",
 				(long unsigned int) lines);
-			return 1;
+			return 0;
 		}
 
 		if (filament == 0)
