@@ -89,12 +89,13 @@ int main(int argc, char* argv[]) {
 		verbose = strtol(getenv("AG_VERBOSE"), NULL, 10);
 
 	if (verbose > 0)
-		printf("verbose mode\n");
+		fprintf(stderr, "verbose mode\n");
 
 	// Initalise serial port if required
 	if (serial_port) {
 		if (verbose > 0)
-			printf("opening serial port %s\n", serial_port);
+			fprintf(stderr, "opening serial port %s\n",
+								serial_port);
 
 		serial = serial_init(serial_port, baudrate);
 
@@ -132,11 +133,11 @@ int main(int argc, char* argv[]) {
 		}
 
 		if (verbose > 0)
-			printf("output to %s\n", filename);
+			fprintf(stderr, "output to %s\n", filename);
 	}
 
 	if (verbose > 0)
-		printf("ready\n");
+		fprintf(stderr, "ready\n");
 
 	// Start of main communications loop
 	while (1) {
@@ -223,7 +224,7 @@ void process_command(char *line) {
 // Handle SIGTERM
 void leave(int signal) {
 	if (verbose > 0)
-		printf("dispatcher exiting\n");
+		fprintf(stderr, "dispatcher exiting\n");
 
 	if (output_file)
 		fclose(output_file);
