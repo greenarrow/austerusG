@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
 
 			// Check if stream is closed
 			if (bytes_r == -1)
-				leave(EXIT_FAILURE);
+				leave(EXIT_SUCCESS);
 
 			// Handle internal austerusG control commands
 			if (strncmp(line_gcode, MSG_CMD, MSG_CMD_LEN) == 0) {
