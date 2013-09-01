@@ -110,8 +110,9 @@ int read_axis_delta(const char *line, const char axis, int *mode, float *delta,
 	switch (prefix) {
 		case 'G':
 			switch (code) {
+				case 0:
 				case 1:
-					/* G1 Move */
+					/* G0 / G1 Move */
 					read_move(line, *mode, axis, delta,
 						position);
 					break;
