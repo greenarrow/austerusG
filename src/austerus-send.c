@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <fcntl.h>
+#include <time.h>
 
 #include "popen2.h"
 #include "nbgetline.h"
@@ -41,6 +42,18 @@ void print_status(int pct, int taken, int estimate) {
 }
 
 
+// Print the status line to the console
+void print_status_stream(int pct, time_t start) {
+	time_t taken;
+	time_t remain;
+
+	taken = time(NULL) - start;
+	remain = taken * 100 / pct;
+
+	printf("%d%% complete (%dm remaining)\n", pct, remain / 60);
+}
+
+
 // Strip out comments from line
 ssize_t filter_comments(char *line) {
 	int i = 0;
@@ -65,6 +78,7 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	FILE *stream_feedback = NULL;
 
 	int status;
+	time_t start;
 
 	int i;
 
@@ -78,6 +92,8 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	int pcta = 0, pctb = 0;
 
 	pid_t pid;
+
+	start = time(NULL);
 
 	// Open the input and output streams to austerus-core
 	pid = popen2(cmd, &pipe_gcode, &pipe_feedback);
@@ -163,7 +179,7 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 				printf("\r");
 				print_status(pcta, 0, 0);
 			} else {
-				printf("%d%% complete\n", pcta);
+				print_status_stream(pcta, start);
 			}
 
 			fflush(stdout);
