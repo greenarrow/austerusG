@@ -48,7 +48,7 @@ void print_status_stream(int pct, time_t start) {
 	time_t remain;
 
 	taken = time(NULL) - start;
-	remain = taken * 100 / pct;
+	remain = (taken * 100 / pct) - taken;
 
 	printf("%d%% complete (%dm remaining)\n", pct, remain / 60);
 }
