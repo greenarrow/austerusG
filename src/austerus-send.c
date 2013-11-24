@@ -322,6 +322,7 @@ int main(int argc, char *argv[])
 
 	for (i=optind; i<argc; i++) {
 		printf("starting print: %s\n", argv[i]);
+		fflush(stdout);
 
 		stream_input = fopen(argv[i], "r");
 
