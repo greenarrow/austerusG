@@ -112,7 +112,7 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	size_t tally = 0;
 	char line_feedback[1024];
 
-	int pcta = 0, pctb = 0;
+	int pcta = -1, pctb = 0;
 
 	pid_t pid;
 
