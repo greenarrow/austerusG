@@ -15,11 +15,29 @@
 #include "austerus-send.h"
 
 
-// Print a time in seconds as HH:MM:SS
-void print_time(int seconds) {
-	int mins = seconds / 60;
-	int hours = seconds / 3600;
-	printf("%3.2d:%2.2d:%2.2d", hours, mins, seconds - (mins * 60 + hours * 60));
+// Print a duration time given in seconds in the most appropriate units.
+void print_duration(time_t time)
+{
+	time_t remain = time;
+	int hours;
+	int mins;
+
+	hours = remain / 60 / 60;
+	remain -= (hours * 60 * 60);
+	mins = remain / 60;
+	remain -= (mins * 60);
+
+	if (hours >= 1) {
+		printf("%dh %dm", hours, mins);
+		return;
+	}
+
+	if (mins >= 1) {
+		printf("%dm", mins);
+		return;
+	}
+
+	printf("%lds", remain);
 }
 
 
@@ -44,13 +62,18 @@ void print_status(int pct, int taken, int estimate) {
 
 // Print the status line to the console
 void print_status_stream(int pct, time_t start) {
-	time_t taken;
-	time_t remain;
+	int taken;
 
 	taken = time(NULL) - start;
-	remain = (taken * 100 / pct) - taken;
 
-	printf("%d%% complete (%dm remaining)\n", pct, remain / 60);
+	printf("%d%% complete (", pct);
+
+	if (pct == 0)
+		printf("unknown");
+	else
+		print_duration((taken * 100 / pct) - taken);
+
+	printf(" remaining)\n");
 }
 
 
