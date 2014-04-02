@@ -23,7 +23,7 @@ austerus-panel: austerus-panel.o nbgetline.o popen2.o serial.o
 
 austerus-send: nbgetline.o popen2.o stats.o serial.o austerus-send.o
 
-austerus-verge: stats.o austerus-verge.o
+austerus-verge: austerus-verge.o common.o point.o gvm.o stats.o
 
 austerus-shift: stats.o austerus-shift.o
 
@@ -41,5 +41,5 @@ install:
 	$(INSTALL) -m 0644 docs/austerus-verge.1 $(DESTDIR)$(MANDIR)/man1
 
 clean:
-	rm -f austerus-panel austerus-send austerus-core austerus-verge \
-		austerus-shift build/*
+	rm -f *.o austerus-panel austerus-send austerus-core austerus-verge \
+		austerus-shift

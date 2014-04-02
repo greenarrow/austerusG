@@ -37,13 +37,12 @@ void usage(void) {
 
 int main(int argc, char *argv[])
 {
-	FILE *stream_input;
-
 	int a = 0;
 
 	char axes[5];
-	struct limit bounds[4];
 	size_t lines = 0;
+
+	struct extends bounds;
 
 	bool deposition = false;
 	bool physical = false;
@@ -107,25 +106,22 @@ int main(int argc, char *argv[])
 	else
 		 strcpy(axes, "XYZ");
 
-	stream_input = fopen(argv[optind], "r");
+	bounds_clear(&bounds);
 
-	if (stream_input == NULL) {
-		fprintf(stderr, "file error\n");
-		return EXIT_FAILURE;
-	}
-	
-	lines = get_extends(bounds, axes, deposition, physical, zmode, zmin,
-		ignore, verbose, stream_input);
+	lines = get_extends(&bounds, deposition, physical, zmode, zmin,
+		ignore, verbose, argv[optind]);
 
 	if (lines == 0) {
 		fprintf(stderr, "read no lines\n");
 		return EXIT_FAILURE;
 	}
 
-	for (a=0; a<strlen(axes); a++)
-		printf("%c\t%f\t%f\n", axes[a], bounds[a].min, bounds[a].max);
+	printf("X\t%f\t%f\n", bounds.x.min, bounds.x.max);
+	printf("Y\t%f\t%f\n", bounds.y.min, bounds.y.max);
+	printf("Z\t%f\t%f\n", bounds.z.min, bounds.z.max);
 
-	fclose(stream_input);
+	if (deposition)
+		printf("E\t%f\t%f\n", bounds.e.min, bounds.e.max);
 
 	return EXIT_SUCCESS;
 }
