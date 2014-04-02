@@ -9,7 +9,7 @@
 #include "austerus-verge.h"
 
 
-float read_part(const char *arg) {
+float read_part(char *arg) {
 	char *part = strtok(arg, ":");
 
 	if (part == NULL) {
