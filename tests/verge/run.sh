@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PATH=$PWD/../..:$PATH
+PATH="${PWD}:${PWD}/../..:${PATH}"
 
 LOG=/tmp/ag-testlog.txt
 TEST_OUTPUT=/tmp/ag-test-output.txt
