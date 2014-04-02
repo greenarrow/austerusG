@@ -36,32 +36,32 @@ austerus-shift: stats.o austerus-shift.o
 austerus-core: serial.o austerus-core.o
 	$(CC) -o austerus-core build/serial.o build/austerus-core.o
 
-austerus-panel.o: src/austerus-panel.c
-	$(CC) -c -o build/austerus-panel.o src/austerus-panel.c
+austerus-panel.o: austerus-panel.c
+	$(CC) -c -o build/austerus-panel.o austerus-panel.c
 
-austerus-send.o: src/austerus-send.c
-	$(CC) -c -o build/austerus-send.o src/austerus-send.c
+austerus-send.o: austerus-send.c
+	$(CC) -c -o build/austerus-send.o austerus-send.c
 
-austerus-verge.o: src/austerus-verge.c
-	$(CC) -c -o build/austerus-verge.o src/austerus-verge.c
+austerus-verge.o: austerus-verge.c
+	$(CC) -c -o build/austerus-verge.o austerus-verge.c
 
-austerus-shift.o: src/austerus-shift.c
-	$(CC) -c -o build/austerus-shift.o src/austerus-shift.c
+austerus-shift.o: austerus-shift.c
+	$(CC) -c -o build/austerus-shift.o austerus-shift.c
 
-austerus-core.o: src/austerus-core.c
-	$(CC) $(COREFLAGS) -c -o build/austerus-core.o src/austerus-core.c
+austerus-core.o: austerus-core.c
+	$(CC) $(COREFLAGS) -c -o build/austerus-core.o austerus-core.c
 
-serial.o: src/serial.c
-	$(CC) -c -o build/serial.o src/serial.c
+serial.o: serial.c
+	$(CC) -c -o build/serial.o serial.c
 
-stats.o: src/stats.c
-	$(CC) -c -o build/stats.o src/stats.c
+stats.o: stats.c
+	$(CC) -c -o build/stats.o stats.c
 
-popen2.o: src/popen2.c
-	$(CC) -c -o build/popen2.o src/popen2.c
+popen2.o: popen2.c
+	$(CC) -c -o build/popen2.o popen2.c
 
-nbgetline.o: src/nbgetline.c
-	$(CC) -c -o build/nbgetline.o src/nbgetline.c
+nbgetline.o: nbgetline.c
+	$(CC) -c -o build/nbgetline.o nbgetline.c
 
 install:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
