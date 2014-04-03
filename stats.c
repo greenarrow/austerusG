@@ -97,11 +97,6 @@ size_t get_extends(struct extends *bounds, bool deposition,
 	bool physical, bool zmode, float zmin, struct region *ignore,
 	bool verbose, const char *filename)
 {
-	if (deposition && zmode) {
-		fprintf(stderr, "deposition and zmode cannot be used\n");
-		abort();
-	}
-
 	bool started = false;
 	bool igthis = false;
 	bool iglast = false;
@@ -112,6 +107,11 @@ size_t get_extends(struct extends *bounds, bool deposition,
 	struct point delta;
 
 	int rc;
+
+	if (deposition && zmode) {
+		fprintf(stderr, "deposition and zmode cannot be used\n");
+		abort();
+	}
 
 	gvm_init(&m, verbose);
 	gvm_load(&m, filename);

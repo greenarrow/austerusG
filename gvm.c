@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE /* fmemopen */
+#define _GNU_SOURCE /* fmemopen */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
