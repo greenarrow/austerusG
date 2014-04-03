@@ -90,6 +90,7 @@ bool check_line_discard(FILE *stream, char c)
 void gvm_init(struct gvm *m, bool verbose)
 {
 	m->verbose = verbose;
+	m->sloppy = false;
 	m->unlocated_moves = false;
 
 	m->gcode = NULL;
@@ -156,7 +157,7 @@ int gvm_read(struct gvm *m, struct command *cmd, struct point *result,
 	if (n > 0 && !check_line_discard(m->gcode, cmd->prefix))
 		return -1;
 
-	if (n < 2)
+	if (n < 2 && !m->sloppy)
 		gcerr("invalid command");
 
 	if (m->verbose)

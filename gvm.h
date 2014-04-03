@@ -19,6 +19,7 @@ struct command {
 struct gvm {
 	/* config */
 	bool verbose;
+	bool sloppy;
 	bool unlocated_moves;
 
 	/* state */
