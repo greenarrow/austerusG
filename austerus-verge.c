@@ -21,7 +21,9 @@ float read_part(char *arg) {
 }
 
 
-// Print usage to terminal
+/*
+ * Print usage to terminal
+ */
 void usage(void) {
 	printf("Usage: austerus-verge [OPTION]... [FILE]\n"
 	"\n"
@@ -37,9 +39,6 @@ void usage(void) {
 
 int main(int argc, char *argv[])
 {
-	int a = 0;
-
-	char axes[5];
 	size_t lines = 0;
 
 	struct extends bounds;
@@ -53,7 +52,7 @@ int main(int argc, char *argv[])
 
 	bool verbose = false;
 
-	// Read command line options
+	/* read command line options */
 	int option_index = 0, opt=0;
 	static struct option loptions[] = {
 		{"help", no_argument, 0, 'h'},
@@ -100,11 +99,6 @@ int main(int argc, char *argv[])
 			"together\n");
 		return EXIT_FAILURE;
 	}
-
-	if (deposition)
-		 strcpy(axes, "XYZE");
-	else
-		 strcpy(axes, "XYZ");
 
 	bounds_clear(&bounds);
 

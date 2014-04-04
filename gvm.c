@@ -145,7 +145,6 @@ int gvm_read(struct gvm *m, struct command *cmd, struct point *result,
 {
 	int n;
 	char axis;
-	char next;
 	float value;
 
 	*mask = AXIS_NONE;
