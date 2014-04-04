@@ -2,6 +2,7 @@
 #define _GNU_SOURCE /* fmemopen */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <float.h>
 
@@ -20,74 +21,66 @@ void gcerr(const char *msg)
 
 
 /*
- * Decode "line" into "cmd" and "result" and set "mask" to denote the axes
- * present in the line.
+ * Return true if stream is at the end of the current line.
  */
-int decode_line(char *line, struct command *cmd, struct point *result,
-							enum axismask *mask)
+bool feol(FILE *stream)
 {
-	FILE *stream;
+	char next;
 
-	char axis;
-	float value;
+	next = getc(stream);
 
-	*mask = AXIS_NONE;
+	if (next == EOF)
+		return true;
 
-	if (strlen(line) == 0)
-		return -1;
+	if (next == '\n')
+		return true;
 
-	/* comment */
-	if (line[0] == ';')
-		return -1;
+	if (ungetc(next, stream) == EOF)
+		return true;
 
-	if (line[0] == '#')
-		return -1;
+	return false;
+}
 
-	stream = fmemopen(line, strlen(line), "r");
 
-	if (stream == NULL)
-		bail("decode_line");
+/*
+ * Consume and discard bytes from a stream until "stop" is reached.
+ */
+void fconsume(FILE *stream, char stop)
+{
+	char c;
 
-	if (fscanf(stream, " %c%u", &(cmd->prefix), &(cmd->code)) != 2)
-		gcerr("invalid command");
+	while (1) {
+		c = getc(stream);
 
-	while (fscanf(stream, " %c%f", &axis, &value) == 2) {
-		switch (axis) {
-		case 'X':
-			result->x = value;
-			*mask |= AXIS_X;
+		if (c == EOF)
 			break;
 
-		case 'Y':
-			result->y = value;
-			*mask |= AXIS_Y;
+		if (c == stop)
 			break;
+	}
+}
 
-		case 'Z':
-			result->z = value;
-			*mask |= AXIS_Z;
-			break;
 
-		case 'E':
-			result->e = value;
-			*mask |= AXIS_E;
-			break;
+/*
+ * Returns true if "c" indicates remainder of line is valid else returns false.
+ * Consumes and discards comments from the stream.
+ */
+bool check_line_discard(FILE *stream, char c)
+{
+	switch (c) {
+	case '\n':
+		return false;
 
-		case ';':
-		case '#':
-			/* comment */
-			goto finish;
+	case ';':
+	case '#':
+		fconsume(stream, '\n');
+		return false;
 
-		default:
-			break;
-		}
+	default:
+		break;
 	}
 
-finish:
-	if (fclose(stream) != 0)
-		bail("decode_line");
-
-	return 0;
+	return true;
 }
 
 
@@ -138,6 +131,80 @@ void gvm_close(struct gvm *m)
 		bail("gvm_close");
 
 	m->gcode = NULL;
+}
+
+
+/*
+ * Decode next line into "cmd" and "result" and set "mask" to denote the axes
+ * present in the line.
+ */
+int gvm_read(struct gvm *m, struct command *cmd, struct point *result,
+							enum axismask *mask)
+{
+	int n;
+	char axis;
+	char next;
+	float value;
+
+	*mask = AXIS_NONE;
+
+	n = fscanf(m->gcode, "%c%u", &(cmd->prefix), &(cmd->code));
+
+	if (n < 1)
+		return -1;
+
+	if (n > 0 && !check_line_discard(m->gcode, cmd->prefix))
+		return -1;
+
+	if (n < 2)
+		gcerr("invalid command");
+
+	if (m->verbose)
+		fprintf(stderr, "gvm  [cmd]: %c%d\n", cmd->prefix, cmd->code);
+
+	if (feol(m->gcode))
+		return 0;
+
+	while ((n = fscanf(m->gcode, " %c%f", &axis, &value)) == 2) {
+		if (m->verbose)
+			fprintf(stderr, "gvm [axis]: %c%f\n", axis, value);
+
+		if (!check_line_discard(m->gcode, axis))
+			return 0;
+
+		switch (axis) {
+		case 'X':
+			result->x = value;
+			*mask |= AXIS_X;
+			break;
+
+		case 'Y':
+			result->y = value;
+			*mask |= AXIS_Y;
+			break;
+
+		case 'Z':
+			result->z = value;
+			*mask |= AXIS_Z;
+			break;
+
+		case 'E':
+			result->e = value;
+			*mask |= AXIS_E;
+			break;
+
+		default:
+			break;
+		}
+
+		if (feol(m->gcode))
+			return 0;
+	}
+
+	if (n > 0)
+		check_line_discard(m->gcode, axis);
+
+	return 0;
 }
 
 
@@ -211,36 +278,25 @@ void gvm_apply(struct gvm *m, struct command *cmd, struct point *values,
  */
 int gvm_step(struct gvm *m)
 {
-	char *line = NULL;
-	size_t len = 0;
-
 	struct command cmd;
 	struct point values;
 	enum axismask mask;
 
-	if (!m->gcode)
+	if (!m->gcode) {
 		bail("no gcode file has been opened");
-
-	if (getline(&line, &len, m->gcode) == -1) {
-		if (line)
-			free(line);
-
 		return -1;
 	}
-
-	if (m->verbose)
-		fprintf(stderr, "gvm [line]: %s", line);
 
 	/* record for delta queries */
 	m->previous = m->position;
 
-	if (decode_line(line, &cmd, &values, &mask) == 0)
+	if (gvm_read(m, &cmd, &values, &mask) == 0)
 		gvm_apply(m, &cmd, &values, &mask);
 
-	m->counter++;
+	if (feof(m->gcode) != 0)
+		return -1;
 
-	if (line)
-		free(line);
+	m->counter++;
 
 	return 0;
 }
