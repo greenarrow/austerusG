@@ -91,7 +91,7 @@ void gvm_init(struct gvm *m, bool verbose)
 {
 	m->verbose = verbose;
 	m->sloppy = false;
-	m->unlocated_moves = false;
+	m->unlocated_moves = true;
 
 	m->gcode = NULL;
 	m->counter = 0;
