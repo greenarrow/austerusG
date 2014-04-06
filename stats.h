@@ -26,7 +26,8 @@ struct region {
 
 void bounds_clear(struct extends *value);
 
-float get_progress_table(unsigned int **table, size_t *lines, FILE *stream);
+float get_progress_table(unsigned int **table, size_t *lines,
+                                                        const char *filename);
 size_t get_extends(struct extends *bounds, bool deposition,
 	bool physical, bool zmode, float zmin, struct region *ignore,
 	bool verbose, const char *filename);

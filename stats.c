@@ -31,42 +31,32 @@ void bounds_clear(struct extends *value)
  * Generate an array containing the total length of filament extruded at the
  * end of each line in the gcode file.
  */
-float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
+float get_progress_table(unsigned int **table, size_t *lines,
+							const char *filename)
 {
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t bytes = 0;
+	struct gvm m;
+	struct point delta;
 
 	static const size_t grow = 2000;
 	size_t capacity = grow;
 
-	float position = 0.0;
 	float extruded = 0.0;
-	float delta = 0.0;
-	float offset = 0.0;
-
-	int mode = MODE_NONE;
 
 	if (*table == NULL) {
-		*table = (unsigned int*)
-			malloc(capacity * sizeof(unsigned int));
-		}
+		*table = (unsigned int*)malloc(capacity *
+							sizeof(unsigned int));
+	}
 
 	*lines = 0;
 
-	while((bytes = getline(&line, &len, stream) != -1))
-	{
-		if (bytes == 0)
-			continue;
+	gvm_init(&m, false);
+	gvm_load(&m, filename);
 
-/*
-		if (read_axis_delta(line, 'E', &mode, &delta, &position,
-			&offset) == 0)
-			continue;
-*/
+	while (gvm_step(&m) != -1) {
+		gvm_get_delta(&m, &delta, true);
+		extruded += delta.e;
 
-		extruded += delta;
-		(*table)[*lines] = (unsigned int) extruded;
+		(*table)[*lines] = (unsigned int)extruded;
 		(*lines)++;
 
 		/* Grow the table if necessary */
@@ -81,7 +71,7 @@ float get_progress_table(unsigned int **table, size_t *lines, FILE *stream)
 	if (*lines < capacity)
 		*table = realloc(*table, *lines * sizeof(unsigned int));
 
-	free(line);
+	gvm_close(&m);
 
 	return extruded;
 }

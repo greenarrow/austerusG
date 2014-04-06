@@ -32,7 +32,8 @@ all: austerus-panel austerus-send austerus-verge austerus-core \
 
 austerus-panel: austerus-panel.o nbgetline.o popen2.o serial.o
 
-austerus-send: nbgetline.o popen2.o stats.o serial.o austerus-send.o
+austerus-send: austerus-send.o common.o point.o gvm.o stats.o nbgetline.o \
+	popen2.o serial.o
 
 austerus-verge: austerus-verge.o common.o point.o gvm.o stats.o
 

@@ -363,6 +363,15 @@ int main(int argc, char *argv[])
 		printf("starting print: %s\n", argv[i]);
 		fflush(stdout);
 
+		filament = get_progress_table(&table, &lines, argv[1]);
+
+		if (lines == 0) {
+			fprintf(stderr, "file contains no lines\n");
+			return EXIT_FAILURE;
+		}
+
+		printf("total filament length: %fmm\n", filament);
+
 		stream_input = fopen(argv[i], "r");
 
 		if (stream_input == NULL) {
@@ -370,14 +379,6 @@ int main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 
-		filament = get_progress_table(&table, &lines, stream_input);
-		if (lines == 0) {
-			fprintf(stderr, "file contains no lines\n");
-			return EXIT_FAILURE;
-		}
-		printf("total filament length: %fmm\n", filament);
-
-		rewind(stream_input);
 		rc = print_file(stream_input, lines, cmd,
 			(unsigned int) filament, table, mode, verbose);
 
