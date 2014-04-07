@@ -90,7 +90,7 @@ bool check_line_discard(FILE *stream, char c)
 void gvm_init(struct gvm *m, bool verbose)
 {
 	m->verbose = verbose;
-	m->sloppy = false;
+	m->sloppy = true;
 	m->unlocated_moves = true;
 
 	m->gcode = NULL;
