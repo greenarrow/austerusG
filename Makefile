@@ -37,7 +37,7 @@ austerus-send: austerus-send.o common.o point.o gvm.o stats.o nbgetline.o \
 
 austerus-verge: austerus-verge.o common.o point.o gvm.o stats.o
 
-austerus-shift: stats.o austerus-shift.o
+austerus-shift: austerus-shift.o common.o point.o gvm.o stats.o
 
 austerus-core: serial.o austerus-core.o
 

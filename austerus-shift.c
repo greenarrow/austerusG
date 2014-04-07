@@ -4,7 +4,33 @@
 #include <getopt.h>
 #include <string.h>
 
-#include "stats.h"
+#include "gvm.h"
+
+
+/*
+ * Check to see if the target axis is specified in the line.
+ */
+bool check_axis(const char *line, char target)
+{
+	char *found = strchr(line, target);
+	return found != NULL;
+}
+
+
+/*
+ * Check to see if any of the target axes are specified in the line.
+ */
+bool check_axes(const char *line, char *targets)
+{
+	int i = 0;
+
+	for (i = 0; i < strlen(targets); i++) {
+		if (check_axis(line, targets[i]))
+			return true;
+	}
+
+	return false;
+}
 
 
 void usage(void) {
@@ -31,7 +57,7 @@ int main(int argc, char *argv[]) {
 	size_t len = 0;
 	ssize_t bytes = 0;
 
-	int mode = NONE;
+	enum coordmode mode = MODE_NONE;
 	char prefix = 0;
 	unsigned int code = 0;
 
@@ -83,7 +109,7 @@ int main(int argc, char *argv[]) {
 			switch (code) {
 			case 1:
 				/* G1 Move */
-				if (mode == RELATIVE)
+				if (mode == MODE_RELATIVE)
 					fputs(line, stdout);
 				else
 					fputs(line, stdout);
@@ -129,13 +155,13 @@ int main(int argc, char *argv[]) {
 				break;
 			case 90:
 				/* G90 Absolute Positioning */
-				mode = ABSOLUTE;
+				mode = MODE_ABSOLUTE;
 				fputs(line, stdout);
 				break;
 			case 91:
 				/* G91 Relative Positioning */
 				fputs(line, stdout);
-				mode = RELATIVE;
+				mode = MODE_RELATIVE;
 				break;
 			case 92:
 				/* G92 Set */
