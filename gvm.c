@@ -323,20 +323,16 @@ unsigned int gvm_get_counter(struct gvm *m)
 
 /*
  * Set "result" to values of current axis positions.
+ * If "physical" is true then use values of real axis positions relative to the
+ * homing position.
  */
-int gvm_get_position(struct gvm *m, struct point *result)
+int gvm_get_position(struct gvm *m, struct point *result, bool physical)
 {
-	*result = m->position;
-	return 0;
-}
+	if (!physical) {
+		*result = m->position;
+		return 0;
+	}
 
-
-/*
- * Set "result" to values of real axis positions relative to the homing
- * position.
- */
-int gvm_get_physical(struct gvm *m, struct point *result)
-{
 	if (!m->located)
 		return -1;
 

@@ -106,8 +106,6 @@ size_t get_extends(struct extends *bounds, bool deposition,
 	struct point pos;
 	struct point delta;
 
-	int rc;
-
 	if (deposition && zmode) {
 		fprintf(stderr, "deposition and zmode cannot be used\n");
 		abort();
@@ -117,13 +115,9 @@ size_t get_extends(struct extends *bounds, bool deposition,
 	gvm_load(&m, filename);
 
 	while (gvm_step(&m) != -1) {
-		if (physical)
-			rc = gvm_get_physical(&m, &pos);
-		else
-			rc = gvm_get_position(&m, &pos);
-
-		/* continue if machine is not physically located */
-		if (rc == -1)
+		/* in physical mode skip updating stats if machine is not
+		 * physically located */
+		if (gvm_get_position(&m, &pos, physical) == -1)
 			continue;
 
 		gvm_get_delta(&m, &delta);
