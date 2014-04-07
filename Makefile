@@ -4,8 +4,17 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 
 CFLAGS += -Wall -pedantic -Wno-long-long -Wno-deprecated -ansi
-
 LDLIBS += -lncurses -lform -lm
+
+REG_VERGE_TESTS = tests/verge/tests/default-simple \
+	tests/verge/tests/deposition-physical-simple \
+	tests/verge/tests/deposition-shifted \
+	tests/verge/tests/deposition-simple \
+	tests/verge/tests/physical-deposition-end-home \
+	tests/verge/tests/physical-shifted \
+	tests/verge/tests/regression-G0 zmin-ignore \
+	tests/verge/tests/zmin-shifted \
+	tests/verge/tests/zmin-simple
 
 SETUID ?= 0
 
@@ -15,6 +24,8 @@ COREMODE = 6755
 else
 COREMODE = 0755
 endif
+
+default: all test
 
 all: austerus-panel austerus-send austerus-verge austerus-core \
 	austerus-shift
@@ -28,6 +39,11 @@ austerus-verge: austerus-verge.o common.o point.o gvm.o stats.o
 austerus-shift: stats.o austerus-shift.o
 
 austerus-core: serial.o austerus-core.o
+
+test:	$(addsuffix .reg.verge,$(REG_VERGE_TESTS))
+
+%.reg.verge:	%
+		tests/verge/run.sh $<
 
 install:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)

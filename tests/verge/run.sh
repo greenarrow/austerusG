@@ -1,27 +1,12 @@
 #!/bin/bash
 
-PATH="${PWD}:${PWD}/../..:${PATH}"
+PATH="`git rev-parse --show-toplevel`:${PATH}"
 
-LOG=/tmp/ag-testlog.txt
-TEST_OUTPUT=/tmp/ag-test-output.txt
+OUTPUT=`mktemp`
+VERBOSE=false
+FAIL=false
 
-
-status()
-{
-    STATUS=$1
-
-    if $VERBOSE; then
-        echo $STATUS
-    fi
-
-    echo $STATUS >> $LOG
-}
-
-
-fail()
-{
-    echo "== TEST $TEST FAILED ==" | tee -a $LOG
-}
+declare -i FAILURES=0
 
 
 usage()
@@ -33,13 +18,13 @@ usage()
     echo "  -h  display this help and exit" >&2
 }
 
-VERBOSE=false
 
 while getopts 'hv' OPTION
 do
-    case $OPTION in
+    case "${OPTION}" in
+
         h)
-            usage "`basename $0`"
+            usage `basename "${0}"`
             exit 0
             ;;
         v)
@@ -48,50 +33,65 @@ do
     esac
 done
 
-shift $(($OPTIND - 1))
-
-declare -i RETURN=0
-
-rm $LOG
+shift $((${OPTIND} - 1))
 
 for TEST in $@; do
-    status "== TEST $TEST START =="
-
+    FAIL=false
     OPTS=`cat "$TEST/flags"`
 
-    if $VERBOSE; then
-        echo austerus-verge $OPTS "$TEST/gcode"
+    if $VERBOSE
+    then
+        echo " START: ${TEST}" >&2
+        echo "   RUN: austerus-verge ${OPTS} ${TEST}/gcode" >&2
     fi
 
-    austerus-verge $OPTS "$TEST/gcode" &> $TEST_OUTPUT
-    RESULT=$?
-    RETURN+=$RESULT
+    austerus-verge $OPTS "$TEST/gcode" > "${OUTPUT}"
+    RC=$?
 
-    if [ ! "$RESULT" -eq 0 ]; then
-        echo "bad exit code $RESULT" &>> $LOG
-        fail
-        continue
+    if [ "${RC}" -ne 0 ]
+    then
+        if ${VERBOSE}
+        then
+            echo "bad exit code ${RC}" >&2
+        fi
+
+        FAIL=true
     fi
 
-    if ($VERBOSE); then
-        diff -u $TEST/output $TEST_OUTPUT
+    if ${VERBOSE}
+    then
+        diff -u $TEST/output $OUTPUT >&2
+    else
+        diff -u $TEST/output $OUTPUT > /dev/null
     fi
 
-    diff -u $TEST/output $TEST_OUTPUT &>> $LOG
-    RESULT=$?
-    RETURN+=$RESULT
+    RC=$?
 
-    if [ ! "$RESULT" -eq 0 ]; then
-        fail
-        continue
+    if [ "${RC}" -ne 0 ]
+    then
+        FAIL=true
     fi
 
-    status "== TEST $TEST PASSED =="
+    if ${FAIL}
+    then
+        FAILURES+=1
+        echo "FAILED: ${TEST}" >&2
+    else
+        if ${VERBOSE}
+        then
+            echo "PASSED: ${TEST}" >&2
+        fi
+    fi
 done
 
-if [ ! "$RETURN" -eq 0 ]; then
-    echo "see log: $LOG"
+if [ "${FAILURES}" -gt 0 ]
+then
+    if ${VERBOSE}
+    then
+        echo "${FAILURES} failures" >&2
+    else
+        echo "run in verbose mode for more details:" >&2
+        echo "$0 -v $@" >&2
+    fi
+    exit 1
 fi
-
-exit $RETURN
-
