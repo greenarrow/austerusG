@@ -102,6 +102,7 @@ void gvm_init(struct gvm *m, bool verbose)
 	point_clear(&(m->position), NULL);
 	point_clear(&(m->previous), NULL);
 	point_clear(&(m->offset), NULL);
+	point_clear(&(m->prevoffset), NULL);
 }
 
 
@@ -290,6 +291,7 @@ int gvm_step(struct gvm *m)
 
 	/* record for delta queries */
 	m->previous = m->position;
+	m->prevoffset = m->offset;
 
 	if (gvm_read(m, &cmd, &values, &mask) == 0)
 		gvm_apply(m, &cmd, &values, &mask);
@@ -346,10 +348,20 @@ int gvm_get_position(struct gvm *m, struct point *result, bool physical)
 /*
  * Set "result" to the delta incurred by the last step.
  */
-void gvm_get_delta(struct gvm *m, struct point *result)
+int gvm_get_delta(struct gvm *m, struct point *result, bool physical)
 {
 	point_clear(result, NULL);
 
 	point_delta(result, &(m->position), NULL, 1);
 	point_delta(result, &(m->previous), NULL, -1);
+
+	if (physical) {
+		if (!m->located)
+			return -1;
+
+		point_delta(result, &(m->offset), NULL, -1);
+		point_delta(result, &(m->prevoffset), NULL, 1);
+	}
+
+	return 0;
 }

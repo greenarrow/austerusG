@@ -120,7 +120,8 @@ size_t get_extends(struct extends *bounds, bool deposition,
 		if (gvm_get_position(&m, &pos, physical) == -1)
 			continue;
 
-		gvm_get_delta(&m, &delta);
+		if (gvm_get_delta(&m, &delta, physical) == -1)
+			continue;
 
 		/* Always update E bounds. */
 		bounds->e.min = fminf(bounds->e.min, pos.e);

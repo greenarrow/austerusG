@@ -32,6 +32,7 @@ struct gvm {
 	struct point position;
 	struct point previous;
 	struct point offset;
+	struct point prevoffset;
 };
 
 
@@ -57,4 +58,4 @@ void gvm_run(struct gvm *m);
 
 unsigned int gvm_get_counter(struct gvm *m);
 int gvm_get_position(struct gvm *m, struct point *result, bool physical);
-void gvm_get_delta(struct gvm *m, struct point *result);
+int gvm_get_delta(struct gvm *m, struct point *result, bool physical);
