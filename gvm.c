@@ -260,7 +260,7 @@ void gvm_apply(struct gvm *m, struct command *cmd, struct point *values,
 		case 92:
 			/* G92 Set */
 			point_delta(&(m->offset), values, mask, 1);
-			point_delta(&(m->offset), &(m->position), NULL, -1);
+			point_delta(&(m->offset), &(m->position), mask, -1);
 
 			point_cpy(&(m->position), values, mask);
 			break;
