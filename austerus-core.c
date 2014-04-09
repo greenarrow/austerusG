@@ -1,3 +1,5 @@
+#define _BSD_SOURCE /* usleep */
+#define _GNU_SOURCE /* getline */
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -13,7 +15,7 @@
 #include "defaults.h"
 
 
-// User options. Global for signal handler.
+/* User options. Global for signal handler. */
 int verbose = 0;
 char *serial_port = NULL;
 char *filename = NULL;
@@ -23,18 +25,18 @@ char *line_gcode = NULL;
 FILE *output_file = NULL;
 
 
-// Main function
-int main(int argc, char* argv[]) {
-	// Number of outstanding acknowledgements
+int main(int argc, char* argv[])
+{
+	/* Number of outstanding acknowledgements */
 	unsigned int ack_outstanding = 0;
 
 	ssize_t bytes_r, bytes_w;
 	size_t line_gcode_len = 0;
 
-	// Buffer for reading from serial port
+	/* Buffer for reading from serial port */
 	char line_feedback[SERIAL_LINE_LEN];
 
-	// User options
+	/* User options */
 	int baudrate		= DEFAULT_BAUDRATE;
 	int serial_timeout	= DEFAULT_TIMEOUT;
 	unsigned int ack_count	= DEFAULT_ACKCOUNT;
@@ -66,14 +68,14 @@ int main(int argc, char* argv[]) {
 	}
 #endif
 
-	// Bind to SIGINT for cleanup
+	/* Bind to SIGINT for cleanup */
 	signal(SIGINT, leave);
 
-	// Read environmental variables
+	/* Read environmental variables */
 	filename	= getenv("AG_DUMP");
 	serial_port	= getenv("AG_SERIALPORT");
 
-	// Allow special NULL string to disable serial port for testing.
+	/* Allow special NULL string to disable serial port for testing. */
 	if (serial_port) {
 		if (strcmp(serial_port, "NULL") == 0)
 			serial_port = NULL;
@@ -91,7 +93,7 @@ int main(int argc, char* argv[]) {
 	if (verbose > 0)
 		fprintf(stderr, "verbose mode\n");
 
-	// Initalise serial port if required
+	/* Initalise serial port if required */
 	if (serial_port) {
 		if (verbose > 0)
 			fprintf(stderr, "opening serial port %s\n",
@@ -108,7 +110,7 @@ int main(int argc, char* argv[]) {
 		tcflush(serial, TCIOFLUSH);
 		usleep(SERIAL_INIT_PAUSE);
 
-		// Read initialisation message
+		/* Read initialisation message */
 		bytes_r = serial_getline(serial, line_feedback, serial_timeout);
 
 		if (bytes_r == -1) {
@@ -123,7 +125,7 @@ int main(int argc, char* argv[]) {
 		usleep(SERIAL_INIT_PAUSE);
 	}
 
-	// Open output file if required
+	/* Open output file if required */
 	if (filename) {
 		output_file = fopen(filename, "a");
 		if (output_file == NULL) {
@@ -139,21 +141,23 @@ int main(int argc, char* argv[]) {
 	if (verbose > 0)
 		fprintf(stderr, "ready\n");
 
-	// Start of main communications loop
+	/* Start of main communications loop */
 	while (1) {
 
-		// Keep sending lines until we reach the maximum outstanding
-		// acknoledgements
+		/*
+		 * Keep sending lines until we reach the maximum outstanding
+		 * acknoledgements.
+		 */
 		while (ack_outstanding < ack_count || ack_count == 0) {
 
-			// Block until we have a complete line from stdin
+			/* Block until we have a complete line from stdin */
 			bytes_r = getline(&line_gcode, &line_gcode_len, stdin);
 
-			// Check if stream is closed
+			/* Check if stream is closed */
 			if (bytes_r == -1)
 				leave(EXIT_SUCCESS);
 
-			// Handle internal austerusG control commands
+			/* Handle internal austerusG control commands */
 			if (strncmp(line_gcode, MSG_CMD, MSG_CMD_LEN) == 0) {
 				process_command(line_gcode);
 				continue;
@@ -165,11 +169,11 @@ int main(int argc, char* argv[]) {
 			}
 
 			if (serial_port) {
-				// Don't send empty lines
+				/* Don't send empty lines */
 				if (bytes_r <= 1)
 					continue;
 
-				// Write the line to the serial port
+				/* Write the line to the serial port */
 				bytes_w = write(serial, line_gcode, bytes_r);
 				if (bytes_w != bytes_r) {
 					perror("Error: write error");
@@ -180,12 +184,16 @@ int main(int argc, char* argv[]) {
 			ack_outstanding++;
 		}
 
-		// We must wait for at least one acknowledgement before we can
-		// send any more lines.
+		/*
+		 * We must wait for at least one acknowledgement before we
+		 * can send any more lines.
+		 */
 
 		while (ack_outstanding >= ack_count && ack_count > 0) {
-			// Block until we have read an entire line from serial
-			// or we timeout
+			/*
+			 * Block until we have read an entire line from
+			 * serial or we timeout.
+			 */
 			bytes_r = serial_getline(serial, line_feedback, serial_timeout);
 
 			if (bytes_r == -1) {
@@ -195,16 +203,20 @@ int main(int argc, char* argv[]) {
 
 			} else if (strncmp(line_feedback, MSG_ACK, MSG_ACK_LEN) == 0 ||
 					strncmp(line_feedback, MSG_DUD, MSG_DUD_LEN) == 0) {
-				// If the line is an ACK (either ok or error)
-				// then decrement count and send to stdout.
+				/*
+				 * If the line is an ACK (either ok or error)
+				 * then decrement count and send to stdout.
+				 */
 
 				ack_outstanding--;
 				printf("%s\n", line_feedback);
 				fflush(stdout);
 
 			} else {
-				// If the line is not an ACK then just send to
-				// stdout.
+				/*
+				 * If the line is not an ACK then just send
+				 * to stdout.
+				 */
 				printf("%s\n", line_feedback);
 				fflush(stdout);
 			}
@@ -213,16 +225,21 @@ int main(int argc, char* argv[]) {
 }
 
 
-// Process an internal austerusG control command
-void process_command(char *line) {
-	if (strncmp(line, MSG_CMD_EXIT, MSG_CMD_EXIT_LEN) == 0) {
+/*
+ * Process an internal austerusG control command.
+ */
+void process_command(char *line)
+{
+	if (strncmp(line, MSG_CMD_EXIT, MSG_CMD_EXIT_LEN) == 0)
 		leave(EXIT_SUCCESS);
-	}
 }
 
 
-// Handle SIGTERM
-void leave(int signal) {
+/*
+ * Handle SIGTERM.
+ */
+void leave(int signal)
+{
 	if (verbose > 0)
 		fprintf(stderr, "dispatcher exiting\n");
 
@@ -237,5 +254,3 @@ void leave(int signal) {
 
 	exit(signal);
 }
-
-
