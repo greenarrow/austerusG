@@ -1,3 +1,4 @@
+#define _GNU_SOURCE /* getline */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -33,7 +34,8 @@ bool check_axes(const char *line, char *targets)
 }
 
 
-void usage(void) {
+void usage(void)
+{
 	printf("Usage: austerus-shift [OPTION]...\n"
 	"\n"
 	"Options:\n"
@@ -96,7 +98,6 @@ int main(int argc, char *argv[]) {
 	/* need more stict exit cases */
 
 	while ((bytes = getline(&line, &len, stream) != -1)) {
-
 		buffer = fmemopen(line, strlen(line), "r");
 
 		if (fscanf(buffer, "%c%u", &prefix, &code) != 2) {
@@ -184,4 +185,6 @@ int main(int argc, char *argv[]) {
 			fputs(line, stdout);
 		}
 	}
+
+	return 0;
 }
