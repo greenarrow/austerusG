@@ -13,7 +13,7 @@
 /*
  * Print gcode error "msg" and exit.
  */
-void gcerr(const char *msg)
+static void gcerr(const char *msg)
 {
 	fprintf(stderr, "gcode error: %s\n", msg);
 	exit(1);
@@ -23,7 +23,7 @@ void gcerr(const char *msg)
 /*
  * Return true if stream is at the end of the current line.
  */
-bool feol(FILE *stream)
+static bool feol(FILE *stream)
 {
 	char next;
 
@@ -45,7 +45,7 @@ bool feol(FILE *stream)
 /*
  * Consume and discard bytes from a stream until "stop" is reached.
  */
-void fconsume(FILE *stream, char stop)
+static void fconsume(FILE *stream, char stop)
 {
 	char c;
 
@@ -65,7 +65,7 @@ void fconsume(FILE *stream, char stop)
  * Returns true if "c" indicates remainder of line is valid else returns false.
  * Consumes and discards comments from the stream.
  */
-bool check_line_discard(FILE *stream, char c)
+static bool check_line_discard(FILE *stream, char c)
 {
 	switch (c) {
 	case '\n':

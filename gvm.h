@@ -36,13 +36,6 @@ struct gvm {
 };
 
 
-void gcerr(const char *msg);
-
-bool feol(FILE *stream);
-void fconsume(FILE *stream, char stop);
-
-bool check_line_discard(FILE *stream, char c);
-
 void gvm_init(struct gvm *m, bool verbose);
 void gvm_load(struct gvm *m, const char *path);
 void gvm_close(struct gvm *m);
