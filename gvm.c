@@ -202,8 +202,17 @@ int gvm_read(struct gvm *m, struct command *cmd, struct point *result,
 			return 0;
 	}
 
-	if (n > 0)
-		check_line_discard(m->gcode, axis);
+	if (m->sloppy) {
+		if (m->verbose) {
+			fprintf(stderr, "gvm [warn]: discarding remainder of "
+								"line\n");
+		}
+
+		check_line_discard(m->gcode, ';');
+	} else {
+		if (n > 0)
+			check_line_discard(m->gcode, axis);
+	}
 
 	return 0;
 }
