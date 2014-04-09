@@ -21,7 +21,7 @@ pid_t popen2(const char *command, int *infp, int *outfp)
 			exit(EXIT_FAILURE);
 
 		case 0:
-			// Child process
+			/* Child process */
 			dup2(p_stdin[0], STDIN_FILENO);
 			close(p_stdin[STDIN_FILENO]);
 			close(p_stdin[STDOUT_FILENO]);
@@ -34,7 +34,7 @@ pid_t popen2(const char *command, int *infp, int *outfp)
 			exit(EXIT_SUCCESS);
 
 		default:
-			// Parent process
+			/* Parent process */
 			*infp = p_stdin[1];
 			*outfp = p_stdout[0];
 
@@ -44,4 +44,3 @@ pid_t popen2(const char *command, int *infp, int *outfp)
 			return pid;
 	}
 }
-
