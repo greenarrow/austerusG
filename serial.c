@@ -10,6 +10,7 @@
  */
 
 
+#define _BSD_SOURCE /* CRTSCTS */
 #include <stdio.h>
 #include <stdlib.h> 
 #include <stdint.h>
@@ -23,20 +24,23 @@
 #include "serial.h"
 
 
-// Open serial port from name and baud rate and return file desciptor
-int serial_init(const char* serialport, int baud) {
+/*
+ * Open serial port from name and baud rate and return file desciptor.
+ */
+int serial_init(const char* serialport, int baud)
+{
 	struct termios toptions;
+
 	int serial;
+	speed_t brate;
 
 	serial = open(serialport, O_RDWR | O_NOCTTY);
+
 	if (serial == -1)
 		return -1;
 
 	if (tcgetattr(serial, &toptions) < 0)
 		return -1;
-
-	// set the baud rate
-	speed_t brate;
 
 	switch (baud) {
 #ifdef B4800
@@ -112,26 +116,26 @@ int serial_init(const char* serialport, int baud) {
 	cfsetispeed(&toptions, brate);
 	cfsetospeed(&toptions, brate);
 
-	// 8N1
+	/* 8N1 */
 	toptions.c_cflag &= ~PARENB;
 	toptions.c_cflag &= ~CSTOPB;
 	toptions.c_cflag &= ~CSIZE;
 	toptions.c_cflag |= CS8;
 
-	// no flow control
+	/* no flow control */
 	toptions.c_cflag &= ~CRTSCTS;
 
-	// turn on READ & ignore ctrl lines
+	/* turn on READ & ignore ctrl lines */
 	toptions.c_cflag |= CREAD | CLOCAL;
 
-	// turn off s/w flow ctrl
+	/* turn off s/w flow ctrl */
 	toptions.c_iflag &= ~(IXON | IXOFF | IXANY);
 
-	// make raw
+	/* make raw */
 	toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 	toptions.c_oflag &= ~OPOST;
 
-	// set blocking method
+	/* set blocking method */
 	toptions.c_cc[VMIN] = SERIAL_VMIN;
 	toptions.c_cc[VTIME] = SERIAL_VTIME;
 
@@ -142,33 +146,36 @@ int serial_init(const char* serialport, int baud) {
 }
 
 
-// Read a complete line from the serial port
-int serial_getline(int serial, char *buffer, int timeout) {
+/*
+ * Read a complete line from the serial port
+ */
+int serial_getline(int serial, char *buffer, int timeout)
+{
 	int nbytes, i = 0;
 	int retries = (timeout * 10) / SERIAL_VTIME;
 	char byte[1];
 
 	do {
-		// Block until one character received or timeout
+		/* Block until one character received or timeout */
 		nbytes = read(serial, byte, 1);
 
-		// Return if in error state
+		/* Return if in error state */
 		if (nbytes == -1)
 			return -1;
 
-		// Try again if timed out
+		/* Try again if timed out */
 		if (nbytes == 0) {
 			retries--;
 			continue;
 		}
 
-		// Otherwise add the new byte to the buffer
+		/* Otherwise add the new byte to the buffer */
 		buffer[i] = byte[0];
 		i++;
 
 	} while (byte[0] != '\n' && retries > 0);
 
-	// Remove end of line characters and null terminate the string
+	/* Remove end of line characters and null terminate the string */
 	if (buffer[i - 2] == '\r')
 		i -= 2;
 	else
@@ -178,5 +185,3 @@ int serial_getline(int serial, char *buffer, int timeout) {
 
 	return i;
 }
-
-
