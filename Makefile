@@ -12,7 +12,8 @@ REG_VERGE_TESTS = tests/verge/tests/default-simple \
 	tests/verge/tests/deposition-simple \
 	tests/verge/tests/physical-deposition-end-home \
 	tests/verge/tests/physical-shifted \
-	tests/verge/tests/regression-G0 zmin-ignore \
+	tests/verge/tests/regression-G0 \
+	tests/verge/tests/zmin-ignore \
 	tests/verge/tests/zmin-shifted \
 	tests/verge/tests/zmin-simple
 
