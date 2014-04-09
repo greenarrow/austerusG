@@ -4,7 +4,7 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 
 CFLAGS += -Wall -pedantic -Wno-long-long -Wno-deprecated -ansi
-LDLIBS += -lncurses -lform -lm
+LDLIBS += -lm
 
 REG_VERGE_TESTS = tests/verge/tests/default-simple \
 	tests/verge/tests/deposition-physical-simple \
@@ -31,7 +31,8 @@ default: all test
 all: austerus-panel austerus-send austerus-verge austerus-core \
 	austerus-shift
 
-austerus-panel: nbgetline.o popen2.o serial.o
+austerus-panel: austerus-panel.o nbgetline.o popen2.o serial.o
+	$(LINK.c) $^ $(LOADLIBES) $(LDLIBS) -lncurses -lform -lm -o $@
 
 austerus-send: common.o point.o gvm.o stats.o nbgetline.o popen2.o serial.o
 
