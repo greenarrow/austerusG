@@ -9,7 +9,8 @@
 #include "austerus-verge.h"
 
 
-float read_part(char *arg) {
+float read_part(char *arg)
+{
 	char *part = strtok(arg, ":");
 
 	if (part == NULL) {
@@ -24,7 +25,8 @@ float read_part(char *arg) {
 /*
  * Print usage to terminal
  */
-void usage(void) {
+void usage(void)
+{
 	printf("Usage: austerus-verge [OPTION]... [FILE]\n"
 	"\n"
 	"Options:\n"
@@ -52,7 +54,6 @@ int main(int argc, char *argv[])
 
 	bool verbose = false;
 
-	/* read command line options */
 	int option_index = 0, opt=0;
 	static struct option loptions[] = {
 		{"help", no_argument, 0, 'h'},
