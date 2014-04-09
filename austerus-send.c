@@ -15,7 +15,9 @@
 #include "austerus-send.h"
 
 
-// Print a duration time given in seconds in the most appropriate units.
+/*
+ * Print a duration time given in seconds in the most appropriate units.
+ */
 void print_duration(time_t time)
 {
 	time_t remain = time;
@@ -41,18 +43,21 @@ void print_duration(time_t time)
 }
 
 
-// Print the status line to the console
-void print_status(int pct, int taken, int estimate) {
+/*
+ * Print the status line to the console.
+ */
+void print_status(int pct, int taken, int estimate)
+{
 	int i, j;
 
 	printf("%3d%%[", pct);
 
-	for(i=0;i<(int)((float)(BAR_WIDTH - 7) * (float)pct / 100.0);i++)
+	for(i = 0; i < (int)((float)(BAR_WIDTH - 7) * (float)pct / 100.0); i++)
 		printf("=");
 
 	printf(">");
 
-	for(j=0;j<BAR_WIDTH - i - 7;j++)
+	for(j = 0; j < BAR_WIDTH - i - 7; j++)
 		printf(" ");
 
 	taken = estimate * pct / 100;
@@ -60,8 +65,11 @@ void print_status(int pct, int taken, int estimate) {
 }
 
 
-// Print the status line to the console
-void print_status_stream(int pct, time_t start) {
+/*
+ * Print the status line to the console.
+ */
+void print_status_stream(int pct, time_t start)
+{
 	int taken;
 
 	taken = time(NULL) - start;
@@ -77,10 +85,13 @@ void print_status_stream(int pct, time_t start) {
 }
 
 
-// Strip out comments from line
-ssize_t filter_comments(char *line) {
+/*
+ * Strip out comments from line.
+ */
+ssize_t filter_comments(char *line)
+{
 	int i = 0;
-	for (i=0; i<strlen(line) - 1; i++) {
+	for (i = 0; i < strlen(line) - 1; i++) {
 		if (line[i] == '(' || line[i] == ';') {
 			line[i] = '\n';
 			line[i + 1] = '\0';
@@ -90,7 +101,9 @@ ssize_t filter_comments(char *line) {
 }
 
 
-// Print gcode from stream_input to austerus-core on stream_gcode
+/*
+ * Print gcode from stream_input to austerus-core on stream_gcode.
+ */
 int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	unsigned int filament, unsigned int *table, int mode, int verbose) {
 
@@ -107,7 +120,7 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 
 	char *line = NULL;
 	size_t line_len = 0;
-	ssize_t nbytes;
+	ssize_t nbytes = 0;
 	ssize_t fbytes;
 	size_t tally = 0;
 	char line_feedback[1024];
@@ -118,10 +131,10 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 
 	start = time(NULL);
 
-	// Open the input and output streams to austerus-core
+	/* Open the input and output streams to austerus-core */
 	pid = popen2(cmd, &pipe_gcode, &pipe_feedback);
 
-	// Make feedback pipe non-blocking
+	/* Make feedback pipe non-blocking */
 	fcntl(pipe_feedback, F_SETFL, O_NONBLOCK);
 
 	stream_gcode = fdopen(pipe_gcode, "w");
@@ -138,17 +151,17 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	}
 
 	if (mode == NORMAL) {
-		for(i=0; i<BAR_WIDTH; i++)
+		for(i = 0; i < BAR_WIDTH; i++)
 			printf(" ");
 	}
 
 	while (nbytes != -1) {
-		// Read the next line from file
+		/* Read the next line from file */
 		nbytes = getline(&line, &line_len, stream_input);
 		if (nbytes < 0)
 			break;
 
-		// Strip out any comments
+		/* Strip out any comments */
 		nbytes = filter_comments(line);
 
 		if (nbytes == 0)
@@ -160,14 +173,14 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 		if (nbytes == 2 && line[0] == '\t' && line[1] == '\n')
 			continue;
 
-		// Write the file to the core
+		/* Write the file to the core */
 		fprintf(stream_gcode, "%s", line);
 		fflush(stream_gcode);
 
 		if (verbose)
 			printf("SEND: %s", line);
 
-		// Read any available feedback lines
+		/* Read any available feedback lines */
 		do {
 			fbytes = nonblock_getline(line_feedback,
 				stream_feedback);
@@ -217,7 +230,7 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 	 * pipe leaving the core to finish reading the data.
 	 */
 
-	// Block until stream is closed
+	/* Block until stream is closed */
 	if (pclose(stream_gcode) != 0)
 		perror("error closing stream");
 
@@ -274,8 +287,11 @@ int print_file(FILE *stream_input, size_t lines, const char *cmd,
 }
 
 
-// Print usage to terminal
-void usage(void) {
+/*
+ * Print usage to terminal.
+ */
+void usage(void)
+{
 	printf("Usage: austerus-send [OPTION]... [FILE]...\n"
 	"\n"
 	"Options:\n"
@@ -299,7 +315,8 @@ int main(int argc, char *argv[])
 	int status = 0;
 	int rc = 0;
 
-	char *cmd = NULL;	// Command string to execute austerus-core
+	/* Command string to execute austerus-core */
+	char *cmd = NULL;
 
 	int i;
 
@@ -307,8 +324,8 @@ int main(int argc, char *argv[])
 	size_t lines = 0;
 	float filament = 0.0;
 
-	// Read command line options
-	int option_index = 0, opt=0;
+	/* Read command line options */
+	int option_index = 0, opt = 0;
 	static struct option loptions[] = {
 		{"help", no_argument, 0, 'h'},
 		{"port", required_argument, 0, 'p'},
@@ -318,7 +335,7 @@ int main(int argc, char *argv[])
 		{"verbose", no_argument, 0, 'v'}
 	};
 
-	// Generate the command line for austerus-core
+	/* Generate the command line for austerus-core */
 	asprintf(&cmd, "/usr/bin/env PATH=$PWD:$PATH");
 
 	while(opt >= 0) {
@@ -359,7 +376,7 @@ int main(int argc, char *argv[])
 
 	asprintf(&cmd, "%s austerus-core", cmd);
 
-	for (i=optind; i<argc; i++) {
+	for (i = optind; i < argc; i++) {
 		printf("starting print: %s\n", argv[i]);
 		fflush(stdout);
 
@@ -399,4 +416,3 @@ int main(int argc, char *argv[])
 	free(cmd);
 	return status;
 }
-
