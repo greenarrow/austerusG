@@ -30,14 +30,13 @@ default: all test
 all: austerus-panel austerus-send austerus-verge austerus-core \
 	austerus-shift
 
-austerus-panel: austerus-panel.o nbgetline.o popen2.o serial.o
+austerus-panel: nbgetline.o popen2.o serial.o
 
-austerus-send: austerus-send.o common.o point.o gvm.o stats.o nbgetline.o \
-	popen2.o serial.o
+austerus-send: common.o point.o gvm.o stats.o nbgetline.o popen2.o serial.o
 
-austerus-verge: austerus-verge.o common.o point.o gvm.o stats.o
+austerus-verge: common.o point.o gvm.o stats.o
 
-austerus-shift: austerus-shift.o common.o point.o gvm.o stats.o
+austerus-shift: common.o point.o gvm.o stats.o
 
 austerus-core: serial.o austerus-core.o
 
