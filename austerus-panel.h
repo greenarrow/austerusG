@@ -1,7 +1,9 @@
 #define KEY_ESC 27
 
-// TODO why can't we read when this is one?
-// premature readlines seem to loose us data!
+/*
+ * TODO why can't we read when this is one?
+ * premature readlines seem to loose us data!
+ */
 #define TEMP_PERIOD	2
 #define EXTRUDE_PERIOD	0.5
 
@@ -26,7 +28,7 @@
 #define DEFAULT_TEMP_TARGET	250
 #define DEFAULT_FEEDRATE	100
 
-// This value is important as it impacts how frequently the extruder moves
+/* This value is important as it impacts how frequently the extruder moves */
 #define CURSES_TIMEOUT		100
 
 #define LINE_FEEDBACK_LEN	256

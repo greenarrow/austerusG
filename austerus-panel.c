@@ -16,8 +16,11 @@
 #include "nbgetline.h"
 
 
-// Draw a box
-void print_box(int x, int y, int w, int h, char *label, int bold) {
+/*
+ * Draw a box
+ */
+void print_box(int x, int y, int w, int h, char *label, int bold)
+{
 	int i, j;
 
 	if (bold > 0)
@@ -61,8 +64,11 @@ void print_box(int x, int y, int w, int h, char *label, int bold) {
 }
 
 
-// Draw home, end and arrow keys etc
-void print_keys(int x, int y, int mask) {
+/*
+ * Draw home, end and arrow keys etc
+ */
+void print_keys(int x, int y, int mask)
+{
 	print_box(x, y, 4, 3, "  ", 0);
 	print_box(x + 3, y, 4, 3, "H ", mask & BIT_H);
 	print_box(x + 6, y, 4, 3, "+Z", mask & BIT_PZ);
@@ -77,8 +83,11 @@ void print_keys(int x, int y, int mask) {
 }
 
 
-// Draw the numerical keys
-void print_fkeys(int x, int y) {
+/*
+ * Draw the numerical keys
+ */
+void print_fkeys(int x, int y)
+{
 	print_box(x, y, 4, 3, "1", 0);
 	print_box(x + 3, y, 4, 3, "2", 0);
 
@@ -91,7 +100,7 @@ void print_fkeys(int x, int y) {
 	print_box(x, y + 6, 4, 3, "7", 0);
 	print_box(x + 3, y + 6, 4, 3, "8", 0);
 
-	// TEMP
+	/* TEMP */
 	print_box(x, y + 8, 4, 3, "f", 0);
 	print_box(x + 3, y + 8, 4, 3, "g", 0);
 }
@@ -106,35 +115,51 @@ void print_extruder_keys(int mask) {
 }
 
 
-// Draw the temperature
-void print_temperature(unsigned int temp_current, unsigned int temp_target) {
+/*
+ * Draw the temperature
+ */
+void print_temperature(unsigned int temp_current, unsigned int temp_target)
+{
 	if (temp_current)
-		mvprintw(2, 0, "Temperature  %3.1d^C / %3.1d^C", temp_current, temp_target);
+		mvprintw(2, 0, "Temperature  %3.1d^C / %3.1d^C", temp_current,
+								temp_target);
 	else
 		mvprintw(2, 0, "Temperature    n/a / %3.1d^C", temp_target);
 }
 
 
-// Draw the feedrate
-void print_feedrate(unsigned int feedrate) {
+/*
+ * Draw the feedrate
+ */
+void print_feedrate(unsigned int feedrate)
+{
 	mvprintw(4, 0, "Feedrate     %11.1dmm", feedrate);
 }
 
 
-// Draw the jog distance
-void print_jog_distance(unsigned int jog_distance) {
+/*
+ * Draw the jog distance
+ */
+void print_jog_distance(unsigned int jog_distance)
+{
 	mvprintw(6, 0, "Jog distance %11.1dmm", jog_distance);
 }
 
 
-// Draw the jog speed
-void print_jog_speed(unsigned int jog_speed) {
+/*
+ * Draw the jog speed
+ */
+void print_jog_speed(unsigned int jog_speed)
+{
 	mvprintw(8, 0, "Jog speed    %13.1d", jog_speed);
 }
 
 
-// Draw the fan status
-void print_fan(unsigned int mode) {
+/*
+ * Draw the fan status
+ */
+void print_fan(unsigned int mode)
+{
 	if (mode)
 		mvprintw(10, 0, "Fan                   On ", mode);
 	else
@@ -142,9 +167,12 @@ void print_fan(unsigned int mode) {
 }
 
 
-// TODO we are not adjusting posX etc here!
-// Send one or all axes to home
-int home_axis(FILE *stream_gcode, char axis) {
+/*
+ * TODO we are not adjusting posX etc here!
+ * Send one or all axes to home
+ */
+int home_axis(FILE *stream_gcode, char axis)
+{
 	switch (axis) {
 		case 'x':
 		case 'X':
@@ -177,9 +205,12 @@ int home_axis(FILE *stream_gcode, char axis) {
 }
 
 
-// TODO we are not adjusting posX etc here!
-// Send one or all axes to end
-int end_axis(FILE *stream_gcode, char axis) {
+/*
+ * TODO we are not adjusting posX etc here!
+ * Send one or all axes to end
+ */
+int end_axis(FILE *stream_gcode, char axis)
+{
 	switch (axis) {
 		case 'x':
 		case 'X':
@@ -216,8 +247,11 @@ int end_axis(FILE *stream_gcode, char axis) {
 }
 
 
-// Print usage to terminal
-void usage(void) {
+/*
+ * Print usage to terminal
+ */
+void usage(void)
+{
 	printf("Usage: austerus-panel [OPTION]...\n"
 	"\n"
 	"Options:\n"
@@ -232,50 +266,55 @@ void usage(void) {
 int main(int argc, char* argv[]) {
 	int nbytes;
 	int status;
-	unsigned int previous, ch;
+
+	unsigned int previous = 0;
+	unsigned int ch = 0;
 	unsigned int temp_extruder = 0, temp_bed = 0;
-	// rename TODO
+
+	/* rename TODO */
 	unsigned int key_mask=0;
 
 	unsigned int jog_distance = DEFAULT_JOG_DISTANCE;
 	unsigned int jog_speed = DEFAULT_JOG_SPEED;
 	unsigned int temp_target = DEFAULT_TEMP_TARGET;
 	unsigned int feedrate = DEFAULT_FEEDRATE;
-	// Explain?
-	float delta_e = 0.001666669999999968 * (float)feedrate;;
 
-	// TODO heater on/off keys
+	time_t last_temp;
+	time_t last_extrude;
 
-	// TODO consider a struct to hold state, then we can declare it once
-	// and pass a single pointer around to various functions!!!
+	float delta_e = 0.0;
 
-	// TODO float? need to?
+	/* TODO heater on/off keys */
+
+	/*
+	 * TODO consider a struct to hold state, then we can declare it once
+	 * and pass a single pointer around to various functions!!!
+	 */
+
+	/* TODO float? need to? */
 	int posX=0, posY=0, posZ=0;
 	float posE=0.0;
 	int extruding=0;
 
-	time_t last_temp = time(NULL);
-	time_t last_extrude = time(NULL);
-
 	int pipe_gcode = 0, pipe_feedback = 0;
-	//stream_gcode = fdopen(pipe_gcode[1], "w");
+	/*stream_gcode = fdopen(pipe_gcode[1], "w"); */
 
 	FILE *stream_gcode = NULL, *stream_feedback = NULL;
 
-	// User options
+	/* User options */
 	char *serial_port = NULL;
 
-	char *cmd = NULL;	// Command string to execute austerus-core
+	char *cmd = NULL;	/* Command string to execute austerus-core */
 
-	//size_t line_feedback_len = PIPE_LINE_BUFFER_LEN;
-	//char *line_feedback = NULL;
+	/*size_t line_feedback_len = PIPE_LINE_BUFFER_LEN; */
+	/*char *line_feedback = NULL; */
 	char line_feedback[LINE_FEEDBACK_LEN];
 
-	// Allocate inital size of input line buffer
-	//pipe_buffer = (char *) malloc (pipe_buffer_len + 1);
+	/* Allocate inital size of input line buffer */
+	/*pipe_buffer = (char *) malloc (pipe_buffer_len + 1); */
 
-	// Read command line options
 	int option_index = 0, opt=0;
+
 	static struct option loptions[] = {
 		{"help", no_argument, 0, 'h'},
 		{"port", required_argument, 0, 'p'},
@@ -283,7 +322,13 @@ int main(int argc, char* argv[]) {
 		{"verbose", no_argument, 0, 'v'}
 	};
 
-	// Generate the command line for austerus-core
+	last_temp = time(NULL);
+	last_extrude = time(NULL);
+
+	/* Explain? */
+	delta_e = 0.001666669999999968 * (float)feedrate;;
+
+	/* Generate the command line for austerus-core */
 	asprintf(&cmd, "/usr/bin/env AG_ACKCOUNT=1 PATH=$PWD:$PATH");
 
 	while(opt >= 0) {
@@ -316,11 +361,11 @@ int main(int argc, char* argv[]) {
 
 	asprintf(&cmd, "%s austerus-core", cmd);
 
-	// Open the gcode output stream to austerus-core
+	/* Open the gcode output stream to austerus-core */
 	popen2(cmd, &pipe_gcode, &pipe_feedback);
 	free(cmd);
 
-	// Make feedback pipe non-blocking
+	/* Make feedback pipe non-blocking */
 	fcntl(pipe_feedback, F_SETFL, O_NONBLOCK);
 
 	stream_gcode = fdopen(pipe_gcode, "w");
@@ -336,21 +381,21 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	// Start curses mode
+	/* Start curses mode */
 	initscr();
-	// Line buffering disabled
+	/* Line buffering disabled */
 	raw();
-	//  We get F1, F2 etc
+	/*  We get F1, F2 etc */
 	keypad(stdscr, TRUE);
-	// Don't echo() while we do getch
+	/* Don't echo() while we do getch */
 	noecho();
-	// Hide cursor
+	/* Hide cursor */
 	curs_set(0);
 
-	// Timeout so we can run extruder and check for feedback
+	/* Timeout so we can run extruder and check for feedback */
 	timeout(CURSES_TIMEOUT);
 
-	// draw initial screen
+	/* draw initial screen */
 	mvprintw(0, 0, "austerusG %s", VERSION);
 	mvprintw(0, 30, "- +");
 
@@ -368,21 +413,21 @@ int main(int argc, char* argv[]) {
 
 	refresh();
 
-	// start of print reset
+	/* start of print reset */
 	fprintf(stream_gcode, "M110\n");
-	// set absolute positioning
+	/* set absolute positioning */
 	fprintf(stream_gcode, "G90\n");
-	// set to mm
+	/* set to mm */
 	fprintf(stream_gcode, "G21\n");
-	// reset coordinates to zero
+	/* reset coordinates to zero */
 	fprintf(stream_gcode, "G92 X0 Y0 Z0 E0\n");
 	fflush(stream_gcode);
 
 	while (1) {
-		// Wait for user input
+		/* Wait for user input */
 		ch = getch();
 
-		// Handle any two key sequences
+		/* Handle any two key sequences */
 		switch (previous) {
 			case KEY_HOME:
 				if (home_axis(stream_gcode, ch)) {
@@ -398,10 +443,10 @@ int main(int argc, char* argv[]) {
 				break;
 		}
 
-		// Handle single key press
+		/* Handle single key press */
 		switch (ch) {
 			case '1':
-				// Decrease target temperature
+				/* Decrease target temperature */
 				if (temp_target > 0) {
 					temp_target = temp_target - 1;
 
@@ -413,7 +458,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case '2':
-				// Increase target temperature
+				/* Increase target temperature */
 				temp_target = temp_target + 1;
 
 				fprintf(stream_gcode, "M104 S%d\n", temp_target);
@@ -423,7 +468,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case '3':
-				// Decrease feedrate
+				/* Decrease feedrate */
 				if (feedrate >= 1) {
 					feedrate -= 1;
 					delta_e = 0.001666669999999968 * (float)feedrate;
@@ -432,14 +477,14 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case '4':
-				// Increase feedrate
+				/* Increase feedrate */
 				feedrate += 1;
 				delta_e = 0.001666669999999968 * (float)feedrate;
 				print_feedrate(feedrate);
 				break;
 
 			case '5':
-				// Decrease jog distance
+				/* Decrease jog distance */
 				if (jog_distance > 10) {
 					fprintf(stream_gcode, "M104 %d\n", temp_target);
 					fflush(stream_gcode);
@@ -449,13 +494,13 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case '6':
-				// Increase jog distance
+				/* Increase jog distance */
 				jog_distance = jog_distance + 10;
 				print_jog_distance(jog_distance);
 				break;
 
 			case '7':
-				// Decrease jog speed
+				/* Decrease jog speed */
 				if (jog_speed > 10) {
 					jog_speed = jog_speed - 100;
 					print_jog_speed(jog_speed);
@@ -463,7 +508,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case '8':
-				// Increase jog speed
+				/* Increase jog speed */
 				jog_speed = jog_speed + 100;
 				print_jog_speed(jog_speed);
 				break;
@@ -487,8 +532,8 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case KEY_LEFT:
-				// Jog X axis minus
-				// TODO merits of G0 or G1 moves?
+				/* Jog X axis minus */
+				/* TODO merits of G0 or G1 moves? */
 				posX -= jog_distance;
 				fprintf(
 					stream_gcode, "G1 X%d Y%d Z%d F%d\n",
@@ -500,7 +545,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case KEY_RIGHT:
-				// Jog X axis plus
+				/* Jog X axis plus */
 				posX += jog_distance;
 				fprintf(
 					stream_gcode, "G1 X%d Y%d Z%d F%d\n",
@@ -512,7 +557,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case KEY_UP:
-				// Jog Y axis plus
+				/* Jog Y axis plus */
 				posY += jog_distance;
 				fprintf(
 					stream_gcode, "G1 X%d Y%d Z%d F%d\n",
@@ -524,7 +569,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case KEY_DOWN:
-				// Jog Y axis minus
+				/* Jog Y axis minus */
 				posY -= jog_distance;
 				fprintf(
 					stream_gcode, "G1 X%d Y%d Z%d F%d\n",
@@ -536,7 +581,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case KEY_PPAGE:
-				// Jog Z axis up
+				/* Jog Z axis up */
 				posZ += jog_distance;
 				fprintf(
 					stream_gcode, "G1 X%d Y%d Z%d F%d\n",
@@ -548,7 +593,7 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case KEY_NPAGE:
-				// Jog Z axis down
+				/* Jog Z axis down */
 				posZ -= jog_distance;
 				fprintf(
 					stream_gcode, "G1 X%d Y%d Z%d F%d\n",
@@ -560,14 +605,14 @@ int main(int argc, char* argv[]) {
 				break;
 
 			case KEY_HOME:
-				// Start of two key move to home command
+				/* Start of two key move to home command */
 				key_mask = key_mask | BIT_H;
 				print_keys(PANEL_POS_KEYS_X, PANEL_POS_KEYS_Y, key_mask);
 				previous = ch;
 				break;
 
 			case KEY_END:
-				// Start of two key move to end command
+				/* Start of two key move to end command */
 				key_mask = key_mask | BIT_END;
 				print_keys(PANEL_POS_KEYS_X, PANEL_POS_KEYS_Y, key_mask);
 				previous = ch;
@@ -575,7 +620,7 @@ int main(int argc, char* argv[]) {
 
 			case 'f':
 			case 'F':
-				// Fan on
+				/* Fan on */
 				fprintf(stream_gcode, "M106\n");
 				fflush(stream_gcode);
 				print_fan(1);
@@ -584,7 +629,7 @@ int main(int argc, char* argv[]) {
 
 			case 'g':
 			case 'G':
-				// Fan off
+				/* Fan off */
 				fprintf(stream_gcode, "M107\n");
 				fflush(stream_gcode);
 				print_fan(0);
@@ -593,9 +638,9 @@ int main(int argc, char* argv[]) {
 
 			case 'q':
 			case KEY_ESC:
-				// Shutdown printer
+				/* Shutdown printer */
 				fprintf(stream_gcode, "M112\n");
-				// Exit core
+				/* Exit core */
 				fprintf(stream_gcode, "#ag:exit\n\n");
 				fflush(stream_gcode);
 
@@ -607,8 +652,10 @@ int main(int argc, char* argv[]) {
 				close(pipe_gcode);
 				close(pipe_feedback);
 
-				//if (line_feedback)
-				//	free(line_feedback);
+/*
+				if (line_feedback)
+					free(line_feedback);
+*/
 
 				wait(&status);
 				printf("core exit = %d\n", status);
@@ -616,24 +663,26 @@ int main(int argc, char* argv[]) {
 				return EXIT_SUCCESS;
 		}
 
-		// TODO check core alive?
+		/* TODO check core alive? */
 
 		if (time(NULL) - last_temp > TEMP_PERIOD)
 		{
 			do {
 				nbytes = nonblock_getline(line_feedback, stream_feedback);
 				
-				//nbytes = getline(&line_feedback, &line_feedback_len, stream_feedback);
+/*
+				nbytes = getline(&line_feedback, &line_feedback_len, stream_feedback);
 
-				//fprintf(stream_gcode, "NB %d %s\n", nbytes);
-				//fflush(stream_gcode);
+				fprintf(stream_gcode, "NB %d %s\n", nbytes);
+				fflush(stream_gcode);
+*/
 
 				if (nbytes > 0) {
-
 					mvprintw(LINES - 3, 0, "nb %d", nbytes);
-					sscanf(line_feedback, "ok T:%d B:%d", &temp_extruder, &temp_bed);
+					sscanf(line_feedback, "ok T:%u B:%u",
+						&temp_extruder, &temp_bed);
 
-					//
+
 					if (nbytes > 66) {
 						line_feedback[63] = '.';
 						line_feedback[64] = '.';
@@ -647,31 +696,28 @@ int main(int argc, char* argv[]) {
 
 			} while (nbytes != -1);
 
-
 			last_temp = time(NULL);
 
 			fprintf(stream_gcode, "M105\n");
 			fflush(stream_gcode);
 
-			// tODO this needs it's own clock too!
-			// tODO arrow keys etc
+			/* tODO this needs it's own clock too! */
+			/* tODO arrow keys etc */
 			if (key_mask |  BIT_D) {
 				key_mask = key_mask & ~BIT_D;
 				print_extruder_keys(key_mask);
 			}
 
-			// We can make one mask #def? from all keys we want cleared
-			// and use it for check andf clear!
-
+			/* We can make one mask #def? from all keys we want cleared */
+			/* and use it for check andf clear! */
 
 		}
-
 
 		if (time(NULL) - last_extrude > EXTRUDE_PERIOD)
 		{
 			last_extrude = time(NULL);
 
-			// This needs to be on an indepentent time check so it can be controlled!! TODO
+			/* This needs to be on an indepentent time check so it can be controlled!! TODO */
 			if (extruding > 0) {
 				posE += delta_e;
 				fprintf(stream_gcode, "G1 E%.2f F%d\n", posE, feedrate);
@@ -682,21 +728,18 @@ int main(int argc, char* argv[]) {
 				fflush(stream_gcode);
 			}
 
-			// tODO arrow keys etc
+			/* tODO arrow keys etc */
 			if (key_mask |  BIT_D) {
 				key_mask = key_mask & ~BIT_D;
 				print_extruder_keys(key_mask);
 			}
 
-			// We can make one mask #def? from all keys we want cleared
-			// and use it for check andf clear!
+			/*
+			 * We can make one mask #def? from all keys we want
+			 * cleared and use it for check andf clear! */
 		}
 		refresh();
 
-
-		// TODO check core is still alive
-
+		/* TODO check core is still alive */
 	}
 }
-
-
