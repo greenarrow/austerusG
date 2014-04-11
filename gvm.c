@@ -304,6 +304,11 @@ int gvm_step(struct gvm *m)
 	if (gvm_read(m, &cmd, &values, &mask) == 0)
 		gvm_apply(m, &cmd, &values, &mask);
 
+	if (m->verbose) {
+		fprintf(stderr, "gvm [resu]: ");
+		point_print(stderr, &(m->position));
+	}
+
 	if (feof(m->gcode) != 0)
 		return -1;
 
