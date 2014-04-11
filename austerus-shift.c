@@ -11,7 +11,7 @@
 /*
  * Check to see if the target axis is specified in the line.
  */
-bool check_axis(const char *line, char target)
+static bool check_axis(const char *line, char target)
 {
 	char *found = strchr(line, target);
 	return found != NULL;
@@ -21,7 +21,7 @@ bool check_axis(const char *line, char target)
 /*
  * Check to see if any of the target axes are specified in the line.
  */
-bool check_axes(const char *line, char *targets)
+static bool check_axes(const char *line, char *targets)
 {
 	int i = 0;
 
@@ -34,7 +34,7 @@ bool check_axes(const char *line, char *targets)
 }
 
 
-void usage(void)
+static void usage(void)
 {
 	printf("Usage: austerus-shift [OPTION]...\n"
 	"\n"
