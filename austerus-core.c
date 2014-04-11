@@ -16,13 +16,44 @@
 
 
 /* User options. Global for signal handler. */
-int verbose = 0;
-char *serial_port = NULL;
-char *filename = NULL;
+static int verbose = 0;
+static char *serial_port = NULL;
+static char *filename = NULL;
 
-int serial;
-char *line_gcode = NULL;
-FILE *output_file = NULL;
+static int serial;
+static char *line_gcode = NULL;
+static FILE *output_file = NULL;
+
+
+/*
+ * Handle SIGTERM.
+ */
+static void leave(int signal)
+{
+	if (verbose > 0)
+		fprintf(stderr, "dispatcher exiting\n");
+
+	if (output_file)
+		fclose(output_file);
+
+	if (serial_port)
+		close(serial);
+
+	if (line_gcode)
+		free(line_gcode);
+
+	exit(signal);
+}
+
+
+/*
+ * Process an internal austerusG control command.
+ */
+static void process_command(char *line)
+{
+	if (strncmp(line, MSG_CMD_EXIT, MSG_CMD_EXIT_LEN) == 0)
+		leave(EXIT_SUCCESS);
+}
 
 
 int main(int argc, char* argv[])
@@ -222,35 +253,4 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-}
-
-
-/*
- * Process an internal austerusG control command.
- */
-void process_command(char *line)
-{
-	if (strncmp(line, MSG_CMD_EXIT, MSG_CMD_EXIT_LEN) == 0)
-		leave(EXIT_SUCCESS);
-}
-
-
-/*
- * Handle SIGTERM.
- */
-void leave(int signal)
-{
-	if (verbose > 0)
-		fprintf(stderr, "dispatcher exiting\n");
-
-	if (output_file)
-		fclose(output_file);
-
-	if (serial_port)
-		close(serial);
-
-	if (line_gcode)
-		free(line_gcode);
-
-	exit(signal);
 }
