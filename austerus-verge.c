@@ -6,10 +6,9 @@
 #include <string.h>
 
 #include "stats.h"
-#include "austerus-verge.h"
 
 
-float read_part(char *arg)
+static float read_part(char *arg)
 {
 	char *part = strtok(arg, ":");
 
@@ -25,7 +24,7 @@ float read_part(char *arg)
 /*
  * Print usage to terminal
  */
-void usage(void)
+static void usage(void)
 {
 	printf("Usage: austerus-verge [OPTION]... [FILE]\n"
 	"\n"
@@ -120,5 +119,3 @@ int main(int argc, char *argv[])
 
 	return EXIT_SUCCESS;
 }
-
-
