@@ -4,6 +4,7 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 
 CFLAGS += -Wall -pedantic -Wno-long-long -Wno-deprecated -ansi
+CFLAGS += -O2
 LDLIBS += -lm
 
 REG_VERGE_TESTS = tests/verge/tests/default-simple \
