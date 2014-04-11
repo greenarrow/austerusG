@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	bool deposition = false;
 	bool physical = false;
 	bool zmode = false;
-	float zmin = 0.0;
+	unsigned long zmin = 0;
 	struct region head;
 	struct region *ignore = NULL;
 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 				break;
 			case 'z':
 				zmode = true;
-				zmin = (float)atof(optarg);
+				zmin = (long int)(atof(optarg) * 1000.0);
 				break;
 			case 'i':
 				head.x1 = read_part(optarg);
@@ -110,12 +110,16 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	printf("X\t%f\t%f\n", bounds.x.min, bounds.x.max);
-	printf("Y\t%f\t%f\n", bounds.y.min, bounds.y.max);
-	printf("Z\t%f\t%f\n", bounds.z.min, bounds.z.max);
+	printf("X\t%f\t%f\n", (float)bounds.x.min / 1000.0,
+						(float)bounds.x.max / 1000.0);
+	printf("Y\t%f\t%f\n", (float)bounds.y.min / 1000.0,
+						(float)bounds.y.max / 1000.0);
+	printf("Z\t%f\t%f\n", (float)bounds.z.min / 1000.0,
+						(float)bounds.z.max / 1000.0);
 
 	if (deposition)
-		printf("E\t%f\t%f\n", bounds.e.min, bounds.e.max);
+		printf("E\t%f\t%f\n", (float)bounds.e.min / 1000.0,
+						(float)bounds.e.max / 1000.0);
 
 	return EXIT_SUCCESS;
 }

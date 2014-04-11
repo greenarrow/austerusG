@@ -3,27 +3,29 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <math.h>
-#include <float.h>
+#include <limits.h>
 
 #include "point.h"
 #include "gvm.h"
 #include "stats.h"
 
+#define MIN(p, q) (((p) < (q)) ? (p) : (q))
+#define MAX(p, q) (((p) >= (q)) ? (p) : (q))
+
 
 void bounds_clear(struct extends *value)
 {
-	value->x.min = FLT_MAX;
-	value->x.max = FLT_MIN;
+	value->x.min = LONG_MAX;
+	value->x.max = LONG_MIN;
 
-	value->y.min = FLT_MAX;
-	value->y.max = FLT_MIN;
+	value->y.min = LONG_MAX;
+	value->y.max = LONG_MIN;
 
-	value->z.min = FLT_MAX;
-	value->z.max = FLT_MIN;
+	value->z.min = LONG_MAX;
+	value->z.max = LONG_MIN;
 
-	value->e.min = FLT_MAX;
-	value->e.max = FLT_MIN;
+	value->e.min = LONG_MAX;
+	value->e.max = LONG_MIN;
 }
 
 
@@ -84,7 +86,7 @@ float get_progress_table(unsigned int **table, size_t *lines,
  * the print bed.
  */
 size_t get_extends(struct extends *bounds, bool deposition,
-	bool physical, bool zmode, float zmin, struct region *ignore,
+	bool physical, bool zmode, long int zmin, struct region *ignore,
 	bool verbose, const char *filename)
 {
 	bool started = false;
@@ -114,8 +116,8 @@ size_t get_extends(struct extends *bounds, bool deposition,
 			continue;
 
 		/* Always update E bounds. */
-		bounds->e.min = fminf(bounds->e.min, pos.e);
-		bounds->e.max = fmaxf(bounds->e.max, pos.e);
+		bounds->e.min = MIN(bounds->e.min, pos.e);
+		bounds->e.max = MAX(bounds->e.max, pos.e);
 
 		igthis = false;
 
@@ -161,24 +163,24 @@ size_t get_extends(struct extends *bounds, bool deposition,
 		if (zmode && pos.z > zmin && pos.z - delta.z > zmin)
 			continue;
 
-		bounds->x.min = fminf(bounds->x.min, pos.x);
-		bounds->x.max = fmaxf(bounds->x.max, pos.x);
+		bounds->x.min = MIN(bounds->x.min, pos.x);
+		bounds->x.max = MAX(bounds->x.max, pos.x);
 
-		bounds->y.min = fminf(bounds->y.min, pos.y);
-		bounds->y.max = fmaxf(bounds->y.max, pos.y);
+		bounds->y.min = MIN(bounds->y.min, pos.y);
+		bounds->y.max = MAX(bounds->y.max, pos.y);
 
-		bounds->z.min = fminf(bounds->z.min, pos.z);
-		bounds->z.max = fmaxf(bounds->z.max, pos.z);
+		bounds->z.min = MIN(bounds->z.min, pos.z);
+		bounds->z.max = MAX(bounds->z.max, pos.z);
 
 		if (!iglast) {
-			bounds->x.min = fminf(bounds->x.min, pos.x - delta.x);
-			bounds->x.max = fmaxf(bounds->x.max, pos.x - delta.x);
+			bounds->x.min = MIN(bounds->x.min, pos.x - delta.x);
+			bounds->x.max = MAX(bounds->x.max, pos.x - delta.x);
 
-			bounds->y.min = fminf(bounds->y.min, pos.y - delta.y);
-			bounds->y.max = fmaxf(bounds->y.max, pos.y - delta.y);
+			bounds->y.min = MIN(bounds->y.min, pos.y - delta.y);
+			bounds->y.max = MAX(bounds->y.max, pos.y - delta.y);
 
-			bounds->z.min = fminf(bounds->z.min, pos.z - delta.z);
-			bounds->z.max = fmaxf(bounds->z.max, pos.z - delta.z);
+			bounds->z.min = MIN(bounds->z.min, pos.z - delta.z);
+			bounds->z.max = MAX(bounds->z.max, pos.z - delta.z);
 		}
 
 		iglast = igthis;

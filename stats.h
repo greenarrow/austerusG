@@ -3,8 +3,8 @@
 
 
 struct peaks {
-	float min;
-	float max;
+	long int min;
+	long int max;
 };
 
 
@@ -17,10 +17,10 @@ struct extends {
 
 
 struct region {
-	float x1;
-	float x2;
-	float y1;
-	float y2;
+	long int x1;
+	long int x2;
+	long int y1;
+	long int y2;
 };
 
 
@@ -29,5 +29,5 @@ void bounds_clear(struct extends *value);
 float get_progress_table(unsigned int **table, size_t *lines,
                                                         const char *filename);
 size_t get_extends(struct extends *bounds, bool deposition,
-	bool physical, bool zmode, float zmin, struct region *ignore,
+	bool physical, bool zmode, long int zmin, struct region *ignore,
 	bool verbose, const char *filename);

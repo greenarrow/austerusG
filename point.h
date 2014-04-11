@@ -11,11 +11,14 @@ enum axismask {
 };
 
 
+/*
+ * Dimensions is units of micro meters.
+ */
 struct point {
-	float x;
-	float y;
-	float z;
-	float e;
+	long int x;
+	long int y;
+	long int z;
+	long int e;
 };
 
 

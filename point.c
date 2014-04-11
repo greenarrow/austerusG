@@ -10,16 +10,16 @@
 void point_clear(struct point *value, enum axismask *mask)
 {
 	if (!mask || *mask & AXIS_X)
-		value->x = 0.0;
+		value->x = 0;
 
 	if (!mask || *mask & AXIS_Y)
-		value->y = 0.0;
+		value->y = 0;
 
 	if (!mask || *mask & AXIS_Z)
-		value->z = 0.0;
+		value->z = 0;
 
 	if (!mask || *mask & AXIS_E)
-		value->e = 0.0;
+		value->e = 0;
 }
 
 
@@ -82,6 +82,7 @@ void point_delta(struct point *value, struct point *delta, enum axismask *mask,
  */
 void point_print(FILE *stream, struct point *value)
 {
-	fprintf(stream, "X%f Y%f Z%f E%f\n", value->x, value->y, value->z,
-								value->e);
+	fprintf(stream, "X%f Y%f Z%f E%f\n", (float)value->x / 1000.0,
+			(float)value->y / 1000.0, (float)value->z / 1000.0,
+			(float)value->e / 1000.0);
 }

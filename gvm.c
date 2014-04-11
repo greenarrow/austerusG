@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <float.h>
+#include <limits.h>
+#include <assert.h>
 
 #include "common.h"
 #include "gvm.h"
@@ -17,6 +18,50 @@ static void gcerr(const char *msg)
 {
 	fprintf(stderr, "gcode error: %s\n", msg);
 	exit(1);
+}
+
+
+/*
+ * Read a decimal from "string" and return as a long int with 1000 times
+ * greater magnitude.
+ */
+static long int strtoml(char *string)
+{
+	long int head;
+	long int tail;
+
+	char *cursor;
+
+	head = strtol(string, &cursor, 10);
+
+	if (head == LONG_MIN || head == LONG_MAX)
+		return head;
+
+	if (cursor == string)
+		return head;
+
+	if (strlen(cursor) < 2)
+		return head * 1000;
+
+	assert(cursor[0] == '.');
+
+	if (strlen(cursor) > 4)
+		cursor[4] = '\0';
+
+	tail = strtol(cursor + 1, &cursor, 10);
+	assert(tail < 1000);
+
+	if (tail == LONG_MIN || tail == LONG_MAX)
+		return tail;
+
+	if (cursor == string)
+		return head;
+
+	while (tail != 0 && tail < 100)
+		tail *= 10;
+
+
+	return (head * 1000) + tail;
 }
 
 
@@ -145,7 +190,7 @@ int gvm_read(struct gvm *m, struct command *cmd, struct point *result,
 {
 	int n;
 	char axis;
-	float value;
+	char value[128];
 
 	*mask = AXIS_NONE;
 
@@ -166,32 +211,48 @@ int gvm_read(struct gvm *m, struct command *cmd, struct point *result,
 	if (feol(m->gcode))
 		return 0;
 
-	while ((n = fscanf(m->gcode, " %c%f", &axis, &value)) == 2) {
+	while ((n = fscanf(m->gcode, " %c%127[0-9.-]", &axis, value)) == 2) {
 		if (m->verbose)
-			fprintf(stderr, "gvm [axis]: %c%f\n", axis, value);
+			fprintf(stderr, "gvm [axis]: %c%s\n", axis, value);
 
 		if (!check_line_discard(m->gcode, axis))
 			return 0;
 
 		switch (axis) {
 		case 'X':
-			result->x = value;
+			result->x = strtoml(value);
 			*mask |= AXIS_X;
+
+			if (result->x == LONG_MIN || result->x == LONG_MAX)
+				gcerr("invalid value");
+
 			break;
 
 		case 'Y':
-			result->y = value;
+			result->y = strtoml(value);
 			*mask |= AXIS_Y;
+
+			if (result->y == LONG_MIN || result->y == LONG_MAX)
+				gcerr("invalid value");
+
 			break;
 
 		case 'Z':
-			result->z = value;
+			result->z = strtoml(value);
 			*mask |= AXIS_Z;
+
+			if (result->z == LONG_MIN || result->z == LONG_MAX)
+				gcerr("invalid value");
+
 			break;
 
 		case 'E':
-			result->e = value;
+			result->e = strtoml(value);
 			*mask |= AXIS_E;
+
+			if (result->e == LONG_MIN || result->e == LONG_MAX)
+				gcerr("invalid value");
+
 			break;
 
 		default:
