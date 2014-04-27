@@ -41,6 +41,10 @@ austerus-verge: common.o point.o gvm.o stats.o
 
 austerus-shift: common.o point.o gvm.o stats.o
 
+austerus-core.o:
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(COREFLAGS) $(TARGET_ARCH) -c \
+		austerus-core.c
+
 austerus-core: serial.o austerus-core.o
 
 test:	$(addsuffix .reg.verge,$(REG_VERGE_TESTS))
