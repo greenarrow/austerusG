@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
 		printf("starting print: %s\n", argv[i]);
 		fflush(stdout);
 
-		filament = get_progress_table(&table, &lines, argv[1]);
+		filament = get_progress_table(&table, &lines, argv[i]);
 
 		if (lines == 0) {
 			fprintf(stderr, "file contains no lines\n");
